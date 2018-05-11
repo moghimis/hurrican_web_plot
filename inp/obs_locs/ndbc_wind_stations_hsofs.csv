@@ -1,0 +1,238 @@
+Station ID,Station Name,Owner,Latitude,Longitude,Sensor
+32303,5N 95W,NDBC,5.0,-95.0,WatertemperatureWinds
+32304,5S 95W,NDBC,-5.0,-95.0,WatertemperatureWinds
+32305,8S 95W,NDBC,-8.0,-95.0,WatertemperatureWinds
+32315,5N 110W,NDBC,5.0,-110.0,WatertemperatureWinds
+32316,2N 110W,NDBC,2.0,-110.0,WatertemperatureWinds
+32317,2S 110W,NDBC,-2.0,-110.0,WatertemperatureWinds
+32318,5S 110W,NDBC,-5.0,-110.0,WatertemperatureWinds
+32319,8S 110W,NDBC,-8.0,-110.0,WatertemperatureWinds
+32320,2N 95W,NDBC,2.0,-95.0,WatertemperatureWinds
+32321,0 95W,NDBC,0.0,-95.0,WatertemperatureWinds
+32322,2S 95W,NDBC,-2.0,-95.0,WatertemperatureWinds
+32323,0 110W,NDBC,0.0,-110.0,WatertemperatureWinds
+32ST0,Stratus,Woods Hole,-19.43,-85.074,AirtemperatureBarometricpressureWinds
+34002,OOI Southern Ocean Buoy,OOI,-55.0,-90.0,AirtemperatureBarometricpressureSalinityWatertemperatureWinds
+41041,NORTH EQUATORIAL TWO - 890 NM East of Martinique,NDBC,14.329,-46.082,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+41NT0,NTAS - Northwest Tropical Atlantic,Woods Hole,14.754,-50.949,AirtemperatureBarometricpressureWinds
+43001,8N 110W,NDBC,8.0,-110.0,WatertemperatureWinds
+45001,"MID SUPERIOR- 60NM North Northeast Hancock, MI",NDBC,48.061,-87.793,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+45004,"EAST SUPERIOR -70 NM NE Marquette, MI",NDBC,47.585,-86.585,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+45006,"WEST SUPERIOR - 30NM NE of Outer Island, WI",NDBC,47.335,-89.793,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+45023,"North Entry Buoy, North Keweenaw Peninsula, MI",Michigan Tech,47.27,-88.607,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+45025,"South Entry Buoy, South Keweenaw Peninsula, MI",Michigan Tech,46.969,-88.398,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+45027,"McQuade Harbor Nearshore, MN",U Minn Duluth,46.86,-91.932,AirtemperatureBarometricpressureWatertemperatureWinds
+45028,Western Lake Superior,U Minn Duluth,46.818,-91.828,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+45171,"Granite Island Buoy, Granite Island, MI",NMU,46.724,-87.411,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+45172,"Grand Marais Buoy, Grand Marais, MI",NMU,46.742,-85.958,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+45173,"Munising Buoy, Munising, MI",NMU,46.573,-86.572,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+45179,Stannard Rock Buoy,Superior Watershed Partnership,47.195,-87.224,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46001,"WESTERN GULF OF ALASKA  - 175NM SE of Kodiak, AK",NDBC,56.304,-147.92,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+46002,"WEST OREGON - 275NM West of Coos Bay, OR",NDBC,42.612,-130.537,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+46005,"WEST WASHINGTON - 300NM West of Aberdeen, WA",NDBC,46.14,-131.07,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46006,"SOUTHEAST PAPA - 600NM West of Eureka, CA",NDBC,40.782,-137.397,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46011,"SANTA MARIA - 21NM NW of Point Arguello, CA",NDBC,34.956,-121.019,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46012,"HALF MOON BAY - 24NM SSW of San Francisco, CA",NDBC,37.363,-122.881,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46013,"BODEGA BAY - 48NM NW of San Francisco, CA",NDBC,38.238,-123.307,AirtemperatureBarometricpressureConductivityCurrentsSalinityWatertemperatureWavesWinds
+46014,"PT ARENA - 19NM North of Point Arena, CA",NDBC,39.235,-123.974,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46015,"PORT ORFORD - 15 NM West of Port Orford, OR",NDBC,42.779,-124.874,AirtemperatureBarometricpressureConductivityCurrentsSalinityWatertemperatureWavesWinds
+46022,"EEL RIVER - 17NM WSW of Eureka, CA",NDBC,40.72,-124.531,AirtemperatureBarometricpressureConductivityCurrentsSalinityWatertemperatureWavesWinds
+46023,"PT ARGUELLO - 17NM WNW of Point Arguello, CA",NDBC,34.714,-120.967,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46025,"Santa Monica Basin - 33NM WSW of Santa Monica, CA",NDBC,33.749,-119.053,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46026,"SAN FRANCISCO - 18NM West of San Francisco, CA",NDBC,37.755,-122.839,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46027,"ST GEORGES - 8NM NW of Crescent City, CA",NDBC,41.852,-124.382,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46028,"CAPE SAN MARTIN - 55NM West NW of Morro Bay, CA",NDBC,35.712,-121.858,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46029,COLUMBIA RIVER BAR - 20NM West of Columbia River Mouth,NDBC,46.143,-124.485,AirtemperatureBarometricpressureCurrentsSalinityWatertemperatureWavesWinds
+46035,"CENTRAL BERING SEA - 310 NM North of Adak, AK",NDBC,57.026,-177.738,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46041,"CAPE ELIZABETH- 45NM NW of Aberdeen, WA",NDBC,47.353,-124.742,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46042,"MONTEREY - 27NM WNW of Monterey, CA",NDBC,36.785,-122.398,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46047,"TANNER BANK - 121NM West of San Diego, CA",NDBC,32.398,-119.498,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46050,"STONEWALL BANK - 20NM West of Newport, OR",NDBC,44.677,-124.515,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46053,"EAST SANTA BARBARA  - 12NM Southwest of Santa Barbara, CA",NDBC,34.252,-119.853,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46054,"WEST SANTA BARBARA  38 NM West of Santa Barbara, CA",NDBC,34.265,-120.477,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46059,"WEST CALIFORNIA - 357NM West of San Francisco, CA",NDBC,38.072,-129.966,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46060,"WEST ORCA BAY - 8NM NW of Hinchinbrook Is., AK",NDBC,60.584,-146.805,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+46061,"Seal Rocks - Between Montague and Hinchinbrook Islands, AK",NDBC,60.23,-146.843,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46066,"SOUTH KODIAK - 310NM SSW of Kodiak, AK",NDBC,52.785,-155.047,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46069,SOUTH SANTA ROSA IS. CA,NDBC,33.674,-120.212,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46070,"SOUTHWEST BERING SEA - 142NM NNE OF ATTU IS, AK",NDBC,55.082,175.153,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46071,"WESTERN ALEUTIANS - 14NM SOUTH OF AMCHITKA IS, AK",NDBC,51.125,179.012,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46072,CENTRAL ALEUTIANS 230NM SW Dutch Harbor,NDBC,51.656,-172.058,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+46073,"SOUTHEAST BERING SEA -205NM WNW of Dutch Harbor, AK",NDBC,55.031,-172.001,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46075,"SHUMAGIN ISLANDS - 85NM South of Sand Point, AK",NDBC,53.983,-160.817,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46076,"CAPE CLEARE - 17 NM South of Montague Is,  AK",NDBC,59.502,-147.99,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46077,"SHELIKOF STRAIT, AK",NDBC,57.91,-154.175,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46078,"ALBATROSS BANK - 104NM South of Kodiak Is., AK",NDBC,55.556,-152.582,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46080,"PORTLOCK BANK- 76NM ENE of Kodiak, AK",NDBC,57.947,-150.042,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46081,Western Prince William Sound,NDBC,60.799,-148.263,AirtemperatureBarometricpressureConductivityCurrentsSalinityWatertemperatureWavesWinds
+46082,"Cape Suckling - 35 NM SE of Kayak Is, AK",NDBC,59.681,-143.372,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46083,"Fairweather Ground 105NM West  of Juneau, AK",NDBC,58.3,-137.997,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46084,"Cape Edgecumbe - 25NM SSW of Cape Edgecumbe, AK",NDBC,56.6,-136.101,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+46085,"CENTRAL GULF OF ALASKA -  265NM West of Cape Ommaney, AK",NDBC,55.868,-142.492,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+46086,"SAN CLEMENTE BASIN - 27NM SE Of San Clemente Is, CA",NDBC,32.491,-118.035,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+46087,"Neah Bay - 6NM North of Cape Flattery, WA     (Traffic Separation Lighted Buoy)",NDBC,48.493,-124.726,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+46088,"NEW DUNGENESS - 17 NM NE of Port Angeles, WA",NDBC,48.334,-123.165,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+46089,"TILLAMOOK, OR - 85 NM WNW of Tillamook, OR",NDBC,45.925,-125.771,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+46091,MBM0,MBARI,36.835,-121.899,AirtemperatureBarometricpressureWatertemperatureWinds
+46092,MBM1,MBARI,36.75,-122.03,AirtemperatureBarometricpressureWatertemperatureWinds
+46093,MBM2,MBARI,36.69,-122.41,AirtemperatureBarometricpressureWatertemperatureWinds
+46094,"Buoy NH-10 - West of Newport, OR",NANOOS,44.642,-124.3,AirtemperatureBarometricpressureSalinityWatertemperatureWinds
+46096,Columbia River Entrance - SATURN Station #02 Offshore,CMOP,46.173,-124.127,AirtemperatureBarometricpressureWatertemperatureWinds
+46097,OOI Newport Shelf,OOI,44.639,-124.304,AirtemperatureBarometricpressureSalinityWatertemperatureWavesWinds
+46098,OOI Waldport Offshore,OOI,44.381,-124.956,AirtemperatureBarometricpressureSalinityWatertemperatureWavesWinds
+46099,OOI Westport Shelf,OOI,46.986,-124.566,AirtemperatureBarometricpressureSalinityWatertemperatureWavesWinds
+46100,OOI Westport Offshore,OOI,46.851,-124.972,AirtemperatureBarometricpressureSalinityWatertemperatureWavesWinds
+46106,Central Cook Inlet AK,NDBC,59.76,-152.09,AirtemperatureBarometricpressureWavesWinds
+46109,Port Angeles Buoy,Intellicheck Mobilisa,48.123,-123.395,AirtemperatureBarometricpressureWatertemperatureWinds
+46110,Sequim Buoy,Intellicheck Mobilisa,48.115,-123.032,AirtemperatureBarometricpressureWinds
+46111,Fort Worden Buoy,Intellicheck Mobilisa,48.131,-122.748,AirtemperatureBarometricpressureWatertemperatureWinds
+46112,Marrowstone Buoy,Intellicheck Mobilisa,48.1,-122.73,AirtemperatureBarometricpressureWinds
+46113,Poulsbo Buoy,Intellicheck Mobilisa,47.73,-122.646,AirtemperatureBarometricpressureWatertemperatureWinds
+46118,Se'lhaem Bellingham Bay,NANOOS,48.724,-122.576,AirtemperatureBarometricpressureWatertemperatureWinds
+46119,Cha'Ba La Push,NANOOS,47.967,-124.95,AirtemperatureWatertemperatureWinds
+46120,"Pt Wells, WA (U of Wash)",Univ Wash,47.761,-122.397,AirtemperatureBarometricpressureSalinityWatertemperatureWinds
+46121,"Carr Inlet, WA (U of Wash)",Univ Wash,47.28,-122.728,AirtemperatureBarometricpressureSalinityWatertemperatureWinds
+46125,"Hansville - Hood Canal, WA",Univ Wash,47.907,-122.627,AirtemperatureBarometricpressureSalinityWatertemperatureWinds
+46126,Wide Bay (Shell),Shell Oil,53.951,-166.602,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+46127,"SATURN Offshore Station #10, Columbia River, South Jetty, OR",CMOP,46.215,-124.063,AirtemperatureBarometricpressureWatertemperatureWinds
+46128,"Buoy CB-06 - West of Coos Bay, OR",NANOOS,43.295,-124.537,BarometricpressureSalinityWatertemperatureWinds
+46410,"SOUTH CORDOVA 188NM SSE of Cordova, AK",NDBC,57.65,-143.798,AirtemperatureBarometricpressureWaterlevelWinds
+48012,Point Lay (UAF),UAF,70.025,-166.071,AirtemperatureBarometricpressureWatertemperatureWinds
+48211,Camden Bay (Shell Arctic),Shell Arctic,70.37,-146.04,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+48212,Harrison Bay (Shell Arctic),Shell Arctic,70.874,-150.279,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+48213,Burger,Shell Arctic,71.502,-164.133,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+48214,Klondike (MOB1),Shell Arctic,70.872,-165.248,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+48216,Crackerjack (Shell Arctic),Shell Arctic,71.758,-167.952,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+51000,NORTHERN HAWAII ONE - 245NM NE of Honolulu HI,NDBC,23.538,-153.808,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+51001,NORTHWESTERN HAWAII ONE - 170 NM West Northwest of Kauai Island,NDBC,24.417,-162.1,AirtemperatureBarometricpressureWatertemperatureWinds
+51002,"SOUTHWEST HAWAII - 215NM SSW of Hilo, HI",NDBC,17.037,-157.696,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+51003,"WESTERN  HAWAII - 205 NM SW of Honolulu, HI",NDBC,19.289,-160.569,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+51004,"SOUTHEAST HAWAII - 205 NM Southeast of Hilo, HI",NDBC,17.602,-152.395,AirtemperatureBarometricpressureCurrentsWatertemperatureWavesWinds
+51006,9N 140W,NDBC,9.0,-140.0,WatertemperatureWinds
+51007,5N 140W,NDBC,5.0,-140.0,WatertemperatureWinds
+51008,2N 140W,NDBC,2.0,-140.0,WatertemperatureWinds
+51009,2S 140W,NDBC,-2.0,-140.0,WatertemperatureWinds
+51010,0 170W,NDBC,0.0,-170.0,WatertemperatureWinds
+51011,0 125W,NDBC,0.0,-125.0,WatertemperatureWinds
+51014,5S 140W,NDBC,-5.0,-140.0,WatertemperatureWinds
+51015,5N 125W,NDBC,5.0,-125.0,WatertemperatureWinds
+51016,2N 125W,NDBC,2.0,-125.0,WatertemperatureWinds
+51017,2S 125W,NDBC,-2.0,-125.0,WatertemperatureWinds
+51018,5S 125W,NDBC,-5.0,-125.0,WatertemperatureWinds
+51019,5S 155W,NDBC,-5.0,-155.0,WatertemperatureWinds
+51020,5N 155W,NDBC,5.0,-155.0,WatertemperatureWinds
+51021,2N 155W,NDBC,2.0,-155.0,WatertemperatureWinds
+51022,2S 155W,NDBC,-2.0,-155.0,WatertemperatureWinds
+51023,0 155W,NDBC,0.0,-155.0,WatertemperatureWinds
+51028,Christmas Island,NDBC,0.0,-153.913,WatertemperatureWinds
+51100,"NORTHERN HAWAII TWO - 252NM NE of Honolulu, HI",NDBC,23.558,-153.9,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+51101,"NORTHWESTERN HAWAII TWO - 190NM NW of Kauai Is, HI",NDBC,24.318,-162.231,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+51301,8N 155W,NDBC,8.0,-155.0,WatertemperatureWinds
+51302,8S 155W,NDBC,-8.0,-155.0,WatertemperatureWinds
+51303,5N 170W,NDBC,5.0,-170.0,WatertemperatureWinds
+51304,5S 170W,NDBC,-5.0,-170.0,WatertemperatureWinds
+51305,2N 170W,NDBC,2.0,-170.0,WatertemperatureWinds
+51306,2S 170W,NDBC,-2.0,-170.0,WatertemperatureWinds
+51307,8N 125W,NDBC,8.0,-125.0,WatertemperatureWinds
+51308,8S 125W,NDBC,-8.0,-125.0,WatertemperatureWinds
+51309,8N 170W,NDBC,8.0,-170.0,WatertemperatureWinds
+51310,8S 170W,NDBC,-8.0,-170.0,WatertemperatureWinds
+51311,0 140W,NDBC,0.0,-140.0,WatertemperatureWinds
+51WH0,WHOTS - Woods Hole Ocean Time-series,Woods Hole,22.667,-157.951,AirtemperatureBarometricpressureWinds
+51X04,Old 51004 (adrift),NDBC,17.586,-152.461,Winds
+52001,2N 165E,NDBC,2.0,165.0,WatertemperatureWinds
+52002,2S 165E,NDBC,-2.0,165.0,WatertemperatureWinds
+52003,5N 165E,NDBC,5.0,165.0,WatertemperatureWinds
+52004,5S 165E,NDBC,-5.0,165.0,WatertemperatureWinds
+52006,8N 165E,NDBC,8.0,165.0,WatertemperatureWinds
+52007,8S 165E,NDBC,-8.0,165.0,WatertemperatureWinds
+52309,5N 180W,NDBC,5.0,180.0,WatertemperatureWinds
+52310,2N 180W,NDBC,2.0,180.0,WatertemperatureWinds
+52311,0 180W,NDBC,0.0,180.0,WatertemperatureWinds
+52312,2S 180W,NDBC,-2.0,180.0,WatertemperatureWinds
+52313,5S 180W,NDBC,-5.0,180.0,WatertemperatureWinds
+52315,8N 180W,NDBC,8.0,180.0,WatertemperatureWinds
+52316,8S 180W,NDBC,-8.0,180.0,WatertemperatureWinds
+52321,0 165E,NDBC,0.0,165.0,WatertemperatureWinds
+AJXA2,"Juneau AJ Dock, AK",Marine Exchange of AK,58.287,-134.398,AirtemperatureBarometricpressureWinds
+AMAA2,"East Amatuli Island Light, AK",NDBC,58.915,-151.952,AirtemperatureBarometricpressureWinds
+AUGA2,"Augustine Island, AK",NDBC,59.378,-153.348,AirtemperatureBarometricpressureWinds
+BIGM4,"Big Bay, MI",NWS Central Region,46.827,-87.727,AirtemperatureBarometricpressureWinds
+BLIA2,"Bligh Reef Light, AK",NDBC,60.839,-146.884,AirtemperatureBarometricpressureWinds
+BLTA2,Bartlett Cove AK,NWS Alaska Region,58.455,-135.889,AirtemperatureBarometricpressureWinds
+CARO3,"Cape Arago, OR",NDBC,43.342,-124.375,AirtemperatureBarometricpressureWinds
+CDEA2,"Cape Decision, AK",NWS Alaska Region,56.001,-134.136,AirtemperatureBarometricpressureWinds
+CDXA2,"Cape Decision MXAK, AK",Marine Exchange of AK,56.001,-134.136,AirtemperatureBarometricpressureWinds
+CPXC1,"Cal Poly Pier, CA",California Polytechnic State U,35.17,-120.741,AirtemperatureBarometricpressureSalinityWatertemperatureWinds
+CSPA2,"Cape Spencer, AK",NWS Alaska Region,58.199,-136.64,AirtemperatureBarometricpressureWinds
+DESW1,"Destruction Island, WA",NDBC,47.675,-124.485,AirtemperatureBarometricpressureWinds
+DISW3,"Devils Island, WI",NDBC,47.079,-90.728,AirtemperatureBarometricpressureWinds
+DMNO3,"Desdemona Sands Light, OR",CMOP,46.226,-123.955,AirtemperatureSalinityWatertemperatureWinds
+DRFA2,"Drift River Terminal, AK",NDBC,60.553,-152.137,AirtemperatureBarometricpressureWinds
+EROA2,"Eldred Rock, AK",NWS Alaska Region,58.971,-135.221,AirtemperatureBarometricpressureWinds
+ERXA2,"Eldred Rock MXAK, AK",Marine Exchange of AK,58.971,-135.221,AirtemperatureBarometricpressureWinds
+FFIA2,"Five Fingers, AK",NDBC,57.272,-133.63,AirtemperatureBarometricpressureWinds
+FILA2,"Flat Island Light, AK",NDBC,59.332,-151.995,AirtemperatureBarometricpressureWinds
+GIXA2,"Guard Island, AK",Marine Exchange of AK,55.446,-131.881,AirtemperatureBarometricpressureWinds
+GRIM4,"Granite Island, MI",NMU,46.721,-87.412,AirtemperatureBarometricpressureWinds
+GRMM4,"Grand Marais, MI",NWS Central Region,46.684,-85.972,AirtemperatureBarometricpressureWinds
+GTRM4,"Superior Grand Traverse Bay, MI",NWS Central Region,47.179,-88.241,AirtemperatureBarometricpressureWinds
+GUXA2,"Gustavus Dock, AK",Marine Exchange of AK,58.408,-135.726,AirtemperatureBarometricpressureWinds
+HAXA2,"Haines Harbor, AK",Marine Exchange of AK,59.234,-135.442,AirtemperatureBarometricpressureWinds
+HMSA2,"Homer Spit, AK",Marine Exchange of AK,59.602,-151.417,AirtemperatureBarometricpressureWinds
+ICYA2,"Icy Bay, AK",Marine Exchange of AK,59.927,-141.359,AirtemperatureBarometricpressureWinds
+JLXA2,"Juneau Library, AK",Marine Exchange of AK,58.298,-134.405,AirtemperatureBarometricpressureWinds
+JMLA2,Juneau AML Dock,Marine Exchange of AK,58.286,-134.39,AirtemperatureBarometricpressureWinds
+KEXA2,"Ketchikan Harbor, AK",Marine Exchange of AK,55.352,-131.684,AirtemperatureBarometricpressureWinds
+KGNA,"Bay of Grand Marais, MN",NWS Central Region,47.745,-90.346,AirtemperatureBarometricpressureWinds
+KP53,"Munising Lake Shore, MI",NWS Central Region,46.417,-86.65,AirtemperatureBarometricpressureWinds
+KP59,"Copper Harbor, MI",NWS Central Region,47.467,-87.883,AirtemperatureBarometricpressureWinds
+LCNA2,"Lincoln Island, AK",NWS Alaska Region,56.058,-132.69,AirtemperatureBarometricpressureWinds
+LIXA2,"Little Island, AK",Marine Exchange of AK,58.54,-135.047,AirtemperatureBarometricpressureWinds
+LJPC1,"La Jolla, CA (073)",SCRIPPS,32.867,-117.257,WavesWinds
+LLBP7,"Lao Lao Bay, Saipan, CNMI",ICON,15.157,145.77,AirtemperatureBarometricpressureWatertemperatureWinds
+LPWA2,"Little Port Walter, AK",NMFS,56.388,-134.637,AirtemperatureBarometricpressureWinds
+MLSC1,"Moss Landing, South Harbor, CA",Moss Landing Marine Lab,36.802,-121.791,AirtemperatureBarometricpressureSalinityWatertemperatureWinds
+MRKA2,"Middle Rock Light, AK",NDBC,61.082,-146.662,AirtemperatureBarometricpressureWinds
+MRNA2,"Marmion Island, AK",Marine Exchange of AK,58.198,-134.257,AirtemperatureBarometricpressureWinds
+MRYA2,"Mary Island, AK",Marine Exchange of AK,55.099,-131.182,AirtemperatureBarometricpressureWinds
+MVXA2,"Mendenhall Valley, AK",Marine Exchange of AK,58.364,-134.606,AirtemperatureBarometricpressureWinds
+MXXA2,"MXAK Office, AK",Marine Exchange of AK,58.301,-134.425,AirtemperatureWinds
+NBBA3,Lake Mead - North Boulder Basin,NPS-Lake Mead NRA,36.087,-114.728,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+NKLA2,Nikolski White Alice,Marine Exchange of AK,52.972,-168.855,AirtemperatureBarometricpressureWinds
+NKXA2,"Naked Island, AK",Marine Exchange of AK,58.255,-134.945,AirtemperatureBarometricpressureWinds
+NLMA3,Lake Mohave - North,NPS-Lake Mead NRA,35.458,-114.666,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+NWPO3,"Newport, OR",NDBC,44.613,-124.067,AirtemperatureBarometricpressureWinds
+OTNM4,"Ontonagon, MI",NWS Central Region,46.87,-89.33,AirtemperatureBarometricpressureWinds
+PBPA2,"Point Bishop, AK",NWS Alaska Region,58.203,-134.148,AirtemperatureBarometricpressureWinds
+PCLM4,"Portage Canal, MI",NWS Central Region,47.276,-88.528,AirtemperatureBarometricpressureWinds
+PGXA2,Point Gardner,Marine Exchange of AK,57.016,-134.618,AirtemperatureBarometricpressureWinds
+PILA2,"Pilot Rock, AK",NDBC,59.742,-149.47,AirtemperatureBarometricpressureWinds
+PILM4,"Passage Island, MI",NDBC,48.223,-88.366,AirtemperatureBarometricpressureWinds
+PNGW3,"Port Wing, WI",NWS Central Region,46.792,-91.386,AirtemperatureBarometricpressureWinds
+POTA2,"Potato Point, AK",NDBC,61.06,-146.7,AirtemperatureBarometricpressureWinds
+PRTA2,"Point Retreat, AK",NWS Alaska Region,58.411,-134.955,AirtemperatureBarometricpressureWinds
+PTAC1,"Point Arena, CA",NDBC,38.955,-123.741,AirtemperatureBarometricpressureWinds
+PTGC1,"Point Arguello, CA",NDBC,34.577,-120.648,AirtemperatureBarometricpressureWinds
+PTLA2,"Portland Island, AK",Marine Exchange of AK,58.346,-134.752,AirtemperatureBarometricpressureWinds
+RIXA2,"Rocky Island, AK",Marine Exchange of AK,58.177,-135.052,AirtemperatureBarometricpressureWinds
+ROAM4,"Rock of Ages, MI",NDBC,47.867,-89.313,AirtemperatureBarometricpressureWinds
+SBBN2,Lake Mead - South Boulder Basin,NPS-Lake Mead NRA,36.05,-114.748,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+SCXA2,"Scull Island, AK",Marine Exchange of AK,58.205,-134.646,AirtemperatureBarometricpressureWinds
+SDIA2,"South Douglas, AK",NWS Alaska Region,58.277,-134.389,AirtemperatureBarometricpressureWinds
+SHXA2,"Sitka Harbor, AK",Marine Exchange of AK,57.055,-135.349,AirtemperatureBarometricpressureWinds
+SISA2,"Sisters Island, AK",NWS Alaska Region,58.177,-135.259,AirtemperatureBarometricpressureWinds
+SISW1,"Smith Island, WA",NDBC,48.321,-122.831,AirtemperatureBarometricpressureWinds
+SKXA2,"Skagway MXAK, AK",Marine Exchange of AK,59.448,-135.326,AirtemperatureBarometricpressureWinds
+SLMN2,Lake Mohave - South,NPS-Lake Mead NRA,35.389,-114.621,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+SLVM5,"Silver Bay, MN",NWS Central Region,47.278,-91.27,AirtemperatureBarometricpressureWinds
+SLXA2,"Salmon Landing, AK",Marine Exchange of AK,55.34,-131.644,AirtemperatureBarometricpressureWinds
+STDM4,"Stannard Rock, MI",NDBC,47.184,-87.225,AirtemperatureBarometricpressureWinds
+STXA2,"Sitka AML, AK",Marine Exchange of AK,57.116,-135.391,AirtemperatureBarometricpressureWinds
+SXHW3,"Saxon Harbor, WI",NWS Central Region,46.563,-90.437,AirtemperatureBarometricpressureWinds
+TIBC1,"Tiburon Pier, San Francisco Bay, CA",CeNCOOS,37.892,-122.447,AirtemperatureBarometricpressureSalinityWatertemperatureWinds
+TKEA2,"Tenakee Springs, AK",Marine Exchange of AK,57.779,-135.219,AirtemperatureBarometricpressureWinds
+TTIW1,"Tatoosh Island, WA",NDBC,48.392,-124.735,AirtemperatureBarometricpressureWinds
+VBBA3,Lake Mead - Virgin Basin,NPS-Lake Mead NRA,36.132,-114.412,AirtemperatureBarometricpressureWatertemperatureWavesWinds
+WFPM4,"Whitefish Point, MI",NWS Central Region,46.76,-84.97,AirtemperatureBarometricpressureWinds
+WPOW1,"West Point, WA",NDBC,47.662,-122.436,AirtemperatureBarometricpressureWinds
