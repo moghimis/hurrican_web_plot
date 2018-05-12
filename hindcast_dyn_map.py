@@ -51,7 +51,7 @@ import lxml.html
 #
 
 from glob import glob
-import geopandas
+
 #
 import arrow
 #
@@ -64,6 +64,7 @@ import cf_units
 from ioos_tools.ioos import collector2table
 import pandas as pd
 from pyoos.collectors.coops.coops_sos import CoopsSos
+from pyoos.collectors.ndbc.ndbc_sos import NdbcSos
 from retrying import retry
 #
 import netCDF4
@@ -83,44 +84,15 @@ import matplotlib.pyplot as plt
 from shapely.geometry import mapping, Polygon
 import fiona
 
+from bokeh.resources import CDN
+from bokeh.plotting import figure
+from bokeh.embed import file_html
+from bokeh.models import Range1d, LinearAxis, HoverTool
 
-#year    = '2017'
-#name    = 'IRMA'
-#inp_dir = '../test_storm_irma/'
+from folium import IFrame
+from geopandas import GeoDataFrame
 
-
-year    = '2012'
-name    = 'SANDY'
-inp_dir = '../test_storm_sandy/'
-
-#year    = '2016'
-#name    = 'MATTHEW'
-#inp_dir = '../test_storm_matthew/'
-
-
-#year    = '2008'
-#name    = 'IKE'
-#inp_dir = '../test_storm_ike/'
-
-
-#year    = '2003'
-#name    = 'ISABEL'
-#inp_dir = '../test_storm_isabel/'
-
-
-plot_cones = True
-plot_sat   = False
-
-fort61       = inp_dir + 'fort.61.nc'
-felev        = inp_dir + 'maxele.63.nc'
-fgrd         = inp_dir + 'depth_hsofs_inp.nc'
-fhwm         = inp_dir + 'hwm.csv'
-
-print ('\n\n\n storm: ', name, 'Year: ', year, '\n\n\n') 
-#year = '2012'
-#name = 'SANDY'
-
-
+import wget
 
 ############################
 from   matplotlib.colors import LinearSegmentedColormap
@@ -151,296 +123,9 @@ my_cmap = plt.cm.jet
 
 ###############################################################
 #Functions
-def url_lister(url):
-    urls = []
-    connection = urlopen(url)
-    dom = lxml.html.fromstring(connection.read())
-    for link in dom.xpath('//a/@href'):
-        urls.append(link)
-    return urls
-
-
-def download(url, path, fname):
-    sys.stdout.write(fname + '\n')
-    if not os.path.isfile(path):
-        urlretrieve(
-            url,
-            filename=path,
-            reporthook=progress_hook(sys.stdout)
-        )
-        sys.stdout.write('\n')
-        sys.stdout.flush()
-
-
-def progress_hook(out):
-    """
-    Return a progress hook function, suitable for passing to
-    urllib.retrieve, that writes to the file object *out*.
-    """
-
-    def it(n, bs, ts):
-        got = n * bs
-        if ts < 0:
-            outof = ''
-        else:
-            # On the last block n*bs can exceed ts, so we clamp it
-            # to avoid awkward questions.
-            got = min(got, ts)
-            outof = '/%d [%d%%]' % (ts, 100 * got // ts)
-        out.write("\r  %d%s" % (got, outof))
-        out.flush()
-    return it
-
-
-
-def get_nhc_storm_info (year,name):
-    """
-    
-    """
-
-    print('Read list of hurricanes from NHC based on year')
-    
-    if int(year) < 2008:  
-        print ('  ERROR:   GIS Data is not available for storms before 2008 ')
-        sys.exit('Exiting .....')
-    
-     
-    url = 'http://www.nhc.noaa.gov/gis/archive_wsurge.php?year='+year
-
-    r = requests.get(url)
-
-    soup = BeautifulSoup(r.content, 'lxml')
-
-    table = soup.find('table')
-    #table = [row.get_text().strip().split(maxsplit=1) for row in table.find_all('tr')]
-
-    tab = []
-    for row in table.find_all('tr'):
-        tmp = row.get_text().strip().split()
-        tab.append([tmp[0],tmp[-1]])
-    
-    print (tab)   
-
-    df = pd.DataFrame(
-        data=tab[:],
-        columns=['identifier', 'name'],
-    ).set_index('name')
-
-
-    ###############################
-
-    print('  > based on specific storm go fetch gis files')
-    hid = df.to_dict()['identifier'][name]
-    code = ('{}'+year).format(hid)
-    hurricane_gis_files = '{}_5day'.format(code)
-    
-    return code,hurricane_gis_files
-
-
-
-def download_nhc_gis_files(hurricane_gis_files):
-    """
-    
-    """
-    
-    nhc = 'http://www.nhc.noaa.gov/gis/forecast/archive/'
-
-    # We don't need the latest file b/c that is redundant to the latest number.
-    fnames = [
-        fname for fname in url_lister(nhc)
-        if fname.startswith(hurricane_gis_files) and 'latest' not in fname
-    ]
-
-
-    base = os.path.abspath(
-        os.path.join(os.path.curdir, 'data', hurricane_gis_files)
-    )
-
-    if not os.path.exists(base):
-        os.makedirs(base)
-
-    for fname in fnames:
-        url = '{}/{}'.format(nhc, fname)
-        path = os.path.join(base, fname)
-        download(url, path,fname)
-
-    return base
-    #################################
-
-
-
-
-# Only needed to run on binder!
-# See https://gitter.im/binder-project/binder?at=59bc2498c101bc4e3acfc9f1
-os.environ['CPL_ZIP_ENCODING'] = 'UTF-8'
-
-def read_advisory_cones_info(hurricane_gis_files,base):
-    print('  >  Read cones shape file ...')
-
-    cones, points = [], []
-    for fname in sorted(glob(os.path.join(base, '{}_*.zip'.format(hurricane_gis_files)))):
-        number = os.path.splitext(os.path.split(fname)[-1])[0].split('_')[-1]
-        
-        # read cone shapefiles
-        
-        if int(year) < 2014:
-            #al092008.001_5day_pgn.shp
-            divd =  '.'
-        else:
-            divd =  '-'
-        
-        pgn = geopandas.read_file(
-            ('/{}'+divd+'{}_5day_pgn.shp').format(code, number),
-            vfs='zip://{}'.format(fname)
-        )
-        cones.append(pgn)
-        
-        #read points shapefiles
-        pts = geopandas.read_file(
-            ('/{}'+divd+'{}_5day_pts.shp').format(code, number),
-            vfs='zip://{}'.format(fname)
-        )
-        # Only the first "obsevartion."
-        points.append(pts.iloc[0])
-    
-    return cones,points,pts
-
-
-
-def download_nhc_best_track(year,code):
-    """
-    
-    """
-
-    url   = 'http://ftp.nhc.noaa.gov/atcf/archive/{}/'.format(year)
-    fname = 'b{}.dat.gz'.format(code)
-    base = os.path.abspath(
-        os.path.join(os.path.curdir, 'data' , code+'_best_track')
-    )
-
-    if not os.path.exists(base):
-        os.makedirs(base)
-
-    path = os.path.join(base, fname)
-    #download(url, path,fname) 
-    wget.download(url+fname,out=base)
-    
-    
-    return base
-
-
-def download_nhc_gis_best_track(year,code):
-    """
-    
-    """
-
-    url   = 'http://www.nhc.noaa.gov/gis/best_track/'
-    fname = '{}_best_track.zip'.format(code)
-    base = os.path.abspath(
-        os.path.join(os.path.curdir, 'data' , code+'_best_track')
-    )
-
-    if not os.path.exists(base):
-        os.makedirs(base)
-
-    path = os.path.join(base, fname)
-    #download(url, path,fname) 
-    wget.download(url+fname,out=base)
-    return path
-
-
-def read_gis_best_track(base,code):
-    """
-    
-    """
-    print('  >  Read GIS Best_track file ...')
-    
-    fname = base+'/{}_best_track.zip'.format(code)
-    
-    points = geopandas.read_file(
-        ('/{}_pts.shp').format(code),
-        vfs='zip://{}'.format(fname)
-        )
-    
-    radii = geopandas.read_file(
-        ('/{}_radii.shp').format(code),
-        vfs='zip://{}'.format(fname)
-        )
-    
-    line = geopandas.read_file(
-        ('/{}_lin.shp').format(code),
-        vfs='zip://{}'.format(fname)
-        )
-    
-    return line,points,radii
-
-
-
-
-
-@retry(stop_max_attempt_number=5, wait_fixed=3000)
-def get_coops(start, end, sos_name, units, bbox, verbose=False):
-    """
-    function to read COOPS data
-    We need to retry in case of failure b/c the server cannot handle
-    the high traffic during hurricane season.
-    """
-    print('     >> Get CO-OPS information')
-
-    collector = CoopsSos()
-    collector.set_bbox(bbox)
-    collector.end_time = end
-    collector.start_time = start
-    collector.variables = [sos_name]
-    ofrs = collector.server.offerings
-    title = collector.server.identification.title
-    config = dict(
-        units=units,
-        sos_name=sos_name,
-        datum='MSL',            ###Saeed added
-    )
-
-    data = collector2table(
-        collector=collector,
-        config=config,
-        col='{} ({})'.format(sos_name, units.format(cf_units.UT_ISO_8859_1))
-    )
-
-    # Clean the table.
-    table = dict(
-        station_name = [s._metadata.get('station_name') for s in data],
-        station_code = [s._metadata.get('station_code') for s in data],
-        sensor       = [s._metadata.get('sensor')       for s in data],
-        lon          = [s._metadata.get('lon')          for s in data],
-        lat          = [s._metadata.get('lat')          for s in data],
-        depth        = [s._metadata.get('depth', 'NA')  for s in data],
-    )
-
-    table = pd.DataFrame(table).set_index('station_name')
-    if verbose:
-        print('Collector offerings')
-        print('{}: {} offerings'.format(title, len(ofrs)))
-    return data, table
-
-
-
-def coops2df(sta='8447930',start='2013-06-13T18:30:00Z',stop='2013-06-13T23:00:00Z'):
-    url='http://opendap.co-ops.nos.noaa.gov/ioos-dif-sos/SOS?request=GetObservation&service=SOS&responseFormat=text/csv&version=1.0.0&offering=urn:ioos:station:NOAA.NOS.CO-OPS:%s&observedProperty=water_surface_height_above_reference_datum&dataType=PreliminaryOneMinute&eventTime=%s/%s' % (sta,start,stop)
-    df = pd.read_csv(url,index_col='date_time',parse_dates=True)  
-    print url
-    return df
-
-def ndbc2df(sta='8447930',start='2013-06-13T18:30:00Z',stop='2013-06-13T23:00:00Z'):
-    url='http://sdf.ndbc.noaa.gov/sos/server.php?request=GetObservation&service=SOS&version=1.0.0&offering=urn:ioos:station:wmo:%s&observedproperty=sea_floor_depth_below_sea_surface&responseformat=text/csv&eventtime=%s/%s' % (sta,start,stop)
-    df = pd.read_csv(url,index_col='date_time',parse_dates=True)  
-    print url
-    return df
-
-
 
 ######################################
 # Let's create a color code for the point track.
-
 colors = {
     'subtropical depression': '#ffff99',
     'tropical depression': '#ffff66',
@@ -453,14 +138,7 @@ colors = {
 ############################################################
 # plot ssh to pop up when click on obs locations
 ##
-from bokeh.resources import CDN
-from bokeh.plotting import figure
-from bokeh.embed import file_html
-from bokeh.models import Range1d, LinearAxis, HoverTool
 
-from folium import IFrame
-
-# Plot defaults.
 tools = "pan,box_zoom,reset"
 width, height = 750, 250
 
@@ -596,9 +274,7 @@ def make_plot(obs, model,label):
     )
     return p
 
-
-
-
+#################
 def make_marker(p, location, fname , color = 'green'):
     html = file_html(p, CDN, fname)
     iframe = IFrame(html, width=width+45, height=height+80)
@@ -613,8 +289,7 @@ def make_marker(p, location, fname , color = 'green'):
 ###############################
 ###try to add countor to map
 
-
-def Read_maxele_return_plot_obj(fgrd=fgrd,felev=felev):
+def Read_maxele_return_plot_obj(fgrd='depth_hsofs_inp.nc',felev='maxele.63.nc'):
     """
     
     """
@@ -640,7 +315,6 @@ def Read_maxele_return_plot_obj(fgrd=fgrd,felev=felev):
         MaxVal    = min(MaxVal,4)
         NumLevels = 21
 
-
     levels = np.linspace(MinVal, MaxVal, num=NumLevels)
     tri = Tri.Triangulation(lon0,lat0, triangles=elems)
 
@@ -648,7 +322,6 @@ def Read_maxele_return_plot_obj(fgrd=fgrd,felev=felev):
     return contour,MinVal,MaxVal,levels
 #############################################################
 #############################################################
-from geopandas import GeoDataFrame
 
 def collec_to_gdf(collec_poly):
     """Transform a `matplotlib.contour.QuadContourSet` to a GeoDataFrame"""
@@ -683,7 +356,7 @@ def collec_to_gdf(collec_poly):
         data={'RGBA': colors},
         crs={'init': 'epsg:4326'})
 
-
+#################
 def convert_to_hex(rgba_color) :
     red = str(hex(int(rgba_color[0]*255)))[2:].capitalize()
     green = str(hex(int(rgba_color[1]*255)))[2:].capitalize()
@@ -698,11 +371,148 @@ def convert_to_hex(rgba_color) :
 
     return '#'+ red + green + blue
 
+#################
+def get_station_ssh(fort61):
+    """
+        Read model ssh
+    """
+    nc0      = netCDF4.Dataset(fort61)
+    ncv0     = nc0.variables 
+    sta_lon  = ncv0['x'][:]
+    sta_lat  = ncv0['y'][:]
+    sta_nam  = ncv0['station_name'][:].squeeze()
+    sta_zeta = ncv0['zeta']        [:].squeeze()
+    sta_date = netCDF4.num2date(ncv0['time'][:], ncv0['time'].units)
+
+    stationIDs = []
+    mod    = []
+    ind = np.arange(len(sta_lat))
+    for ista in ind:
+        stationID = sta_nam[ista].tostring().decode().rstrip()
+        stationIDs.append(stationID)
+        mod_tmp = pd.DataFrame(data = np.c_[sta_date, sta_zeta[:,ista]], columns=['date_time',  'ssh']).set_index('date_time')
+        mod_tmp._metadata = stationID
+        mod.append(mod_tmp)
+
+    stationIDs = np.array(stationIDs)
+    mod_table = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
+   
+    return mod,mod_table
+    
+#################
+def get_station_wnd_all(fort61):
+    """
+    Read model wind
+    
+    """
+    nc0      = netCDF4.Dataset(fort61)
+    ncv0     = nc0.variables 
+    sta_lon  = ncv0['x'][:]
+    sta_lat  = ncv0['y'][:]
+    sta_nam  = ncv0['station_name'][:].squeeze()
+    sta_uwnd = ncv0['uwnd']        [:].squeeze()
+    sta_vwnd = ncv0['vwnd']        [:].squeeze()
+    sta_pres = ncv0['pres']        [:].squeeze()
+    sta_date = netCDF4.num2date(ncv0['time'][:], ncv0['time'].units)
+
+    stationIDs = []
+    mod    = []
+    ind = np.arange(len(sta_lat))
+    for ista in ind:
+        stationID = sta_nam[ista].tostring().decode().rstrip()
+        stationIDs.append(stationID)
+        mod_tmp = pd.DataFrame(data = np.c_[sta_date,sta_uwnd[:,ista],sta_vwnd[:,ista],sta_pres[:,ista]],
+                               columns = ['date_time', 'uwnd' , 'vwnd', 'pres']).set_index('date_time')
+        mod_tmp._metadata = stationID
+        mod.append(mod_tmp)
+
+    stationIDs = np.array(stationIDs)
+    mod_table = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
+   
+    return mod,mod_table
+    
+#################
+def get_station_wnd(fort61):
+    """
+    Read model wind
+    
+    """
+    nc0      = netCDF4.Dataset(fort61)
+    ncv0     = nc0.variables 
+    sta_lon  = ncv0['x'][:]
+    sta_lat  = ncv0['y'][:]
+    sta_nam  = ncv0['station_name'][:].squeeze()
+    sta_wnd =  np.sqrt ( ncv0['uwnd'] [:].squeeze() ** 2 +  ncv0['vwnd']        [:].squeeze() ** 2 )
+    sta_date = netCDF4.num2date(ncv0['time'][:], ncv0['time'].units)
+
+    stationIDs = []
+    mod    = []
+    ind = np.arange(len(sta_lat))
+    for ista in ind:
+        stationID = sta_nam[ista].tostring().decode().rstrip()
+        stationIDs.append(stationID)
+        mod_tmp = pd.DataFrame(data = np.c_[sta_date,sta_wnd[:,ista]],
+                               columns = ['date_time', 'wnd' ]).set_index('date_time')
+        mod_tmp._metadata = stationID
+        mod.append(mod_tmp)
+
+    stationIDs = np.array(stationIDs)
+    mod_table = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
+   
+    return mod,mod_table
+
 
 
 ########################################
 ####       MAIN CODE from HERE     #####
 ########################################
+
+
+#year    = '2017'
+#name    = 'IRMA'
+#inp_dir = '../test_storm_irma/'
+
+
+year    = '2012'
+name    = 'SANDY'
+
+
+
+#year    = '2016'
+#name    = 'MATTHEW'
+#inp_dir = '../test_storm_matthew/'
+
+
+#year    = '2008'
+#name    = 'IKE'
+#inp_dir = '../test_storm_ike/'
+
+
+#year    = '2003'
+#name    = 'ISABEL'
+#inp_dir = '../test_storm_isabel/'
+
+prefix  = name[:3]
+inp_dir = 'inp/'+ prefix+'/'
+plot_cones = True
+plot_sat   = False
+#
+fhwm = 'inp/obs_hwm/hwm_' + prefix.lower() + '.csv'
+fgrd = 'inp/depth_hsofs_inp.nc'
+#
+dirs = glob(inp_dir+'/*')
+for dir0 in dirs:
+    fort61       = dir0 + '/fort_wind.61.nc'
+    wav_at_nbdc  = dir0 + '/01_wave_on_ndbc_obs.nc'
+    win_at_nbdc  = dir0 + '/01_wind_on_ndbc_obs.nc'
+    felev        = dir0 + '/maxele.63.nc'
+    
+
+print ('\n\n\n storm: ', name, 'Year: ', year, '\n\n\n') 
+#year = '2012'
+#name = 'SANDY'
+
+
 
 #read file info
 code,hurricane_gis_files = get_nhc_storm_info (year,name)
@@ -769,100 +579,41 @@ ssh, ssh_table = get_coops(
 )
 
 ssh_table 
+
+
+print('  > Get wind information')
+wnd_obs, wnd_obs_table = get_coops(
+    start=start_dt,
+    end=end_dt,
+    sos_name='wind_speed',
+    units=cf_units.Unit('m/s'),
+    bbox=bbox,
+)
+
+wnd_obs_table
+
+
+print('  > Get wind ocean information (ndbc)')
+wnd_ocn, wnd_ocn_table = get_ndbc(
+    start=start_dt,
+    end=end_dt,
+    sos_name='winds',
+    bbox=bbox,
+    )
+wnd_ocn_table
+
+print('  > Get wave ocean information (ndbc)')
+wav_ocn, wav_ocn_table = get_ndbc(
+    start=start_dt,
+    end=end_dt,
+    sos_name='waves',
+    bbox=bbox,
+    )
+wav_ocn_table
+
+
 ############################################################
-
-def get_station_ssh(fort61):
-    """
-        Read model ssh
-    """
-    nc0      = netCDF4.Dataset(fort61)
-    ncv0     = nc0.variables 
-    sta_lon  = ncv0['x'][:]
-    sta_lat  = ncv0['y'][:]
-    sta_nam  = ncv0['station_name'][:].squeeze()
-    sta_zeta = ncv0['zeta']        [:].squeeze()
-    sta_date = netCDF4.num2date(ncv0['time'][:], ncv0['time'].units)
-
-    stationIDs = []
-    mod    = []
-    ind = np.arange(len(sta_lat))
-    for ista in ind:
-        stationID = sta_nam[ista].tostring().decode().rstrip()
-        stationIDs.append(stationID)
-        mod_tmp = pd.DataFrame(data = np.c_[sta_date, sta_zeta[:,ista]], columns=['date_time',  'ssh']).set_index('date_time')
-        mod_tmp._metadata = stationID
-        mod.append(mod_tmp)
-
-    stationIDs = np.array(stationIDs)
-    mod_table = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
-   
-    return mod,mod_table
-    
-
-
-def get_station_wnd_all(fort61):
-    """
-    Read model wind
-    
-    """
-    nc0      = netCDF4.Dataset(fort61)
-    ncv0     = nc0.variables 
-    sta_lon  = ncv0['x'][:]
-    sta_lat  = ncv0['y'][:]
-    sta_nam  = ncv0['station_name'][:].squeeze()
-    sta_uwnd = ncv0['uwnd']        [:].squeeze()
-    sta_vwnd = ncv0['vwnd']        [:].squeeze()
-    sta_pres = ncv0['pres']        [:].squeeze()
-    sta_date = netCDF4.num2date(ncv0['time'][:], ncv0['time'].units)
-
-    stationIDs = []
-    mod    = []
-    ind = np.arange(len(sta_lat))
-    for ista in ind:
-        stationID = sta_nam[ista].tostring().decode().rstrip()
-        stationIDs.append(stationID)
-        mod_tmp = pd.DataFrame(data = np.c_[sta_date,sta_uwnd[:,ista],sta_vwnd[:,ista],sta_pres[:,ista]],
-                               columns = ['date_time', 'uwnd' , 'vwnd', 'pres']).set_index('date_time')
-        mod_tmp._metadata = stationID
-        mod.append(mod_tmp)
-
-    stationIDs = np.array(stationIDs)
-    mod_table = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
-   
-    return mod,mod_table
-    
-
-def get_station_wnd(fort61):
-    """
-    Read model wind
-    
-    """
-    nc0      = netCDF4.Dataset(fort61)
-    ncv0     = nc0.variables 
-    sta_lon  = ncv0['x'][:]
-    sta_lat  = ncv0['y'][:]
-    sta_nam  = ncv0['station_name'][:].squeeze()
-    sta_wnd =  np.sqrt ( ncv0['uwnd'] [:].squeeze() ** 2 +  ncv0['vwnd']        [:].squeeze() ** 2 )
-    sta_date = netCDF4.num2date(ncv0['time'][:], ncv0['time'].units)
-
-    stationIDs = []
-    mod    = []
-    ind = np.arange(len(sta_lat))
-    for ista in ind:
-        stationID = sta_nam[ista].tostring().decode().rstrip()
-        stationIDs.append(stationID)
-        mod_tmp = pd.DataFrame(data = np.c_[sta_date,sta_wnd[:,ista]],
-                               columns = ['date_time', 'wnd' ]).set_index('date_time')
-        mod_tmp._metadata = stationID
-        mod.append(mod_tmp)
-
-    stationIDs = np.array(stationIDs)
-    mod_table = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
-   
-    return mod,mod_table
-    
-
-############ Read SSH data
+########### Read SSH data
 mod,mod_table = get_station_ssh(fort61)
 
 ############# Sea Surface height analysis ########################
@@ -908,16 +659,7 @@ try:
     #read wind model data
     wnd_mod,wnd_mod_table = get_station_wnd(fort61)
 
-    print('  > Get wind information')
-    wnd_obs, wnd_obs_table = get_coops(
-        start=start_dt,
-        end=end_dt,
-        sos_name='wind_speed',
-        units=cf_units.Unit('m/s'),
-        bbox=bbox,
-    )
 
-    wnd_obs_table
 
     # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
     commonw  = set(wnd_obs_table['station_code']).intersection(wnd_mod_table  ['station_code'].values)
@@ -965,9 +707,6 @@ print('  > Put together the final maps')
 lon = track.centroid.x
 lat = track.centroid.y
 ############################################################
-
-
-#####################################################################
 #if  'FLDATELBL' in points[0].keys():
 ##
 m = folium.Map(location=[lat, lon], tiles='OpenStreetMap', zoom_start=4)

@@ -4,7 +4,8 @@ from __future__ import division,print_function
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Read obs from NDBC and Co-opc
+
+Functions for handling observations from ndbc and coops
 
 
 """
@@ -17,7 +18,8 @@ __email__ = "moghimis@gmail.com"
 
 
 
-import pandas as pd
+import pandas    as pd
+import geopandas as gpd
 import numpy as np
 
 from bs4 import BeautifulSoup
@@ -34,7 +36,234 @@ from io import BytesIO
 from ioos_tools.ioos import collector2table
 import pickle 
 
+try:
+    from urllib.request import urlopen, urlretrieve
+except:
+    from urllib import urlopen, urlretrieve
+import lxml.html
 
+import wget
+
+##################
+def url_lister(url):
+    urls = []
+    connection = urlopen(url)
+    dom = lxml.html.fromstring(connection.read())
+    for link in dom.xpath('//a/@href'):
+        urls.append(link)
+    return urls
+
+#################
+def download(url, path, fname):
+    sys.stdout.write(fname + '\n')
+    if not os.path.isfile(path):
+        urlretrieve(
+            url,
+            filename=path,
+            reporthook=progress_hook(sys.stdout)
+        )
+        sys.stdout.write('\n')
+        sys.stdout.flush()
+
+#################
+def progress_hook(out):
+    """
+    Return a progress hook function, suitable for passing to
+    urllib.retrieve, that writes to the file object *out*.
+    """
+
+    def it(n, bs, ts):
+        got = n * bs
+        if ts < 0:
+            outof = ''
+        else:
+            # On the last block n*bs can exceed ts, so we clamp it
+            # to avoid awkward questions.
+            got = min(got, ts)
+            outof = '/%d [%d%%]' % (ts, 100 * got // ts)
+        out.write("\r  %d%s" % (got, outof))
+        out.flush()
+    return it
+
+#################
+def get_nhc_storm_info (year,name):
+    """
+    
+    """
+
+    print('Read list of hurricanes from NHC based on year')
+    
+    if int(year) < 2008:  
+        print ('  ERROR:   GIS Data is not available for storms before 2008 ')
+        sys.exit('Exiting .....')
+    
+     
+    url = 'http://www.nhc.noaa.gov/gis/archive_wsurge.php?year='+year
+
+    r = requests.get(url)
+
+    soup = BeautifulSoup(r.content, 'lxml')
+
+    table = soup.find('table')
+    #table = [row.get_text().strip().split(maxsplit=1) for row in table.find_all('tr')]
+
+    tab = []
+    for row in table.find_all('tr'):
+        tmp = row.get_text().strip().split()
+        tab.append([tmp[0],tmp[-1]])
+    
+    print (tab)   
+
+    df = pd.DataFrame(
+        data=tab[:],
+        columns=['identifier', 'name'],
+    ).set_index('name')
+
+
+    ###############################
+
+    print('  > based on specific storm go fetch gis files')
+    hid = df.to_dict()['identifier'][name]
+    code = ('{}'+year).format(hid)
+    hurricane_gis_files = '{}_5day'.format(code)
+    
+    return code,hurricane_gis_files
+
+
+#################
+@retry(stop_max_attempt_number=5, wait_fixed=3000)
+def download_nhc_gis_files(hurricane_gis_files):
+    """
+    
+    """
+    
+    nhc = 'http://www.nhc.noaa.gov/gis/forecast/archive/'
+
+    # We don't need the latest file b/c that is redundant to the latest number.
+    fnames = [
+        fname for fname in url_lister(nhc)
+        if fname.startswith(hurricane_gis_files) and 'latest' not in fname
+    ]
+
+
+    base = os.path.abspath(
+        os.path.join(os.path.curdir, 'data', hurricane_gis_files)
+    )
+
+    if not os.path.exists(base):
+        os.makedirs(base)
+
+    for fname in fnames:
+        url = '{}/{}'.format(nhc, fname)
+        path = os.path.join(base, fname)
+        download(url, path,fname)
+
+    return base
+    #################################
+
+# Only needed to run on binder!
+# See https://gitter.im/binder-project/binder?at=59bc2498c101bc4e3acfc9f1
+os.environ['CPL_ZIP_ENCODING'] = 'UTF-8'
+
+def read_advisory_cones_info(hurricane_gis_files,base):
+    print('  >  Read cones shape file ...')
+
+    cones, points = [], []
+    for fname in sorted(glob(os.path.join(base, '{}_*.zip'.format(hurricane_gis_files)))):
+        number = os.path.splitext(os.path.split(fname)[-1])[0].split('_')[-1]
+        
+        # read cone shapefiles
+        
+        if int(year) < 2014:
+            #al092008.001_5day_pgn.shp
+            divd =  '.'
+        else:
+            divd =  '-'
+        
+        pgn = gpd.read_file(
+            ('/{}'+divd+'{}_5day_pgn.shp').format(code, number),
+            vfs='zip://{}'.format(fname)
+        )
+        cones.append(pgn)
+        
+        #read points shapefiles
+        pts = gpd.read_file(
+            ('/{}'+divd+'{}_5day_pts.shp').format(code, number),
+            vfs='zip://{}'.format(fname)
+        )
+        # Only the first "obsevartion."
+        points.append(pts.iloc[0])
+    
+    return cones,points,pts
+
+#################
+def download_nhc_best_track(year,code):
+    """
+    
+    """
+
+    url   = 'http://ftp.nhc.noaa.gov/atcf/archive/{}/'.format(year)
+    fname = 'b{}.dat.gz'.format(code)
+    base = os.path.abspath(
+        os.path.join(os.path.curdir, 'data' , code+'_best_track')
+    )
+
+    if not os.path.exists(base):
+        os.makedirs(base)
+
+    path = os.path.join(base, fname)
+    #download(url, path,fname) 
+    wget.download(url+fname,out=base)
+
+    return base
+
+#################
+def download_nhc_gis_best_track(year,code):
+    """
+    
+    """
+
+    url   = 'http://www.nhc.noaa.gov/gis/best_track/'
+    fname = '{}_best_track.zip'.format(code)
+    base = os.path.abspath(
+        os.path.join(os.path.curdir, 'data' , code+'_best_track')
+    )
+
+    if not os.path.exists(base):
+        os.makedirs(base)
+
+    path = os.path.join(base, fname)
+    #download(url, path,fname) 
+    wget.download(url+fname,out=base)
+    return base
+
+#################
+def read_gis_best_track(base,code):
+    """
+    
+    """
+    print('  >  Read GIS Best_track file ...')
+    
+    fname = base+'/{}_best_track.zip'.format(code)
+    
+    points = gpd.read_file(
+        ('/{}_pts.shp').format(code),
+        vfs='zip://{}'.format(fname)
+        )
+    
+    radii = gpd.read_file(
+        ('/{}_radii.shp').format(code),
+        vfs='zip://{}'.format(fname)
+        )
+    
+    line = gpd.read_file(
+        ('/{}_lin.shp').format(code),
+        vfs='zip://{}'.format(fname)
+        )
+    
+    return line,points,radii
+
+#################
 @retry(stop_max_attempt_number=5, wait_fixed=3000)
 def get_coops(start, end, sos_name, units, bbox,datum='MSL', verbose=True):
     """
@@ -77,14 +306,12 @@ def get_coops(start, end, sos_name, units, bbox,datum='MSL', verbose=True):
         print('{}: {} offerings'.format(title, len(ofrs)))
     return data, table
 
-
+#################
 @retry(stop_max_attempt_number=5, wait_fixed=3000)
 def get_ndbc(start, end, bbox , sos_name='waves',datum='MSL', verbose=True):
     """
     function to read NBDC data
-
-
-
+    ###################
     sos_name = waves    
     all_col = (['station_id', 'sensor_id', 'latitude (degree)', 'longitude (degree)',
            'date_time', 'sea_surface_wave_significant_height (m)',
@@ -118,9 +345,7 @@ def get_ndbc(start, end, bbox , sos_name='waves',datum='MSL', verbose=True):
     elif sos_name == 'winds':
             col = ['wind_from_direction (degree)','wind_speed (m/s)',
                    'wind_speed_of_gust (m/s)','upward_air_velocity (m/s)']
-    
-    
-    
+   
     collector = NdbcSos()
     collector.set_bbox(bbox)
     collector.start_time = start
@@ -153,7 +378,6 @@ def get_ndbc(start, end, bbox , sos_name='waves',datum='MSL', verbose=True):
     
     #override short time
     collector.end_time = end
-
     
     data = []
     for k, row in df.iterrows():
@@ -187,7 +411,6 @@ def get_ndbc(start, end, bbox , sos_name='waves',datum='MSL', verbose=True):
         depth        = [s._metadata.get('depth', 'NA')  for s in data],
     )
     
-    
 
     table = pd.DataFrame(table).set_index('station_name')
     if verbose:
@@ -196,111 +419,7 @@ def get_ndbc(start, end, bbox , sos_name='waves',datum='MSL', verbose=True):
     
     return data, table
 
-
-
-
-base_dir = '/disks/NASARCHIVE/saeed_moghimi/data/coops_obs_pyoos/'
-
-
-
-# OOI Endurance Array bounding box# OOI E 
-bbox = [-127, 43, -123.75, 48]
-#South Florida
-bbox = [-87 , 24, -79, 30]  
-
-#hsofs
-bbox = [-99.0, 5.0, -52.8, 46.3]
-
-#Sandy
-name = 'sandy'
-year = '2012'
-#bbox = [ -82.0, 23.0 , -67.0, 43.6]
-#bbox = [ -79.0 ,32.0 , -69.0, 42.0]
-bbox = [ -77.0 ,37.0 , -70.0, 42.0]
-
-                
-
-#sandy 
-start_dt =  datetime.datetime(2012,10,22)
-end_dt   =  datetime.datetime(2012,11,4)
-
-
-
-
-print('  > Get wind ocean information (ndbc)')
-wnd_ocn, wnd_ocn_table = get_ndbc(
-    start=start_dt,
-    end=end_dt,
-    sos_name='winds',
-    bbox=bbox,
-    )
-
-print('  > Get wave ocean information (ndbc)')
-wav_ocn, wav_ocn_table = get_ndbc(
-    start=start_dt,
-    end=end_dt,
-    sos_name='waves',
-    bbox=bbox,
-    )
-
-
-print('  > Get water level information  CO-OPS')
-ssh, ssh_table = get_coops(
-    start=start_dt,
-    end=end_dt,
-    sos_name='water_surface_height_above_reference_datum',
-    units=cf_units.Unit('meters'),
-    datum = 'MSL',
-    bbox=bbox,
-)
-
-print('  > Get wind information CO-OPS')
-wnd_obs, wnd_obs_table = get_coops(
-    start=start_dt,
-    end=end_dt,
-    sos_name='wind_speed',
-    units=cf_units.Unit('m/s'),
-    bbox=bbox,
-    )
-
-
-all_data = dict(wnd_ocn =wnd_ocn   , wnd_ocn_table = wnd_ocn_table,
-                wav_ocn = wav_ocn  , wav_ocn_table = wav_ocn_table,
-                ssh     =  ssh     , ssh_table     = ssh_table,
-                wnd_obs =  wnd_obs , wnd_obs_table = wnd_obs_table)
-
-
-bbox_txt = str(bbox).replace(' ','_').replace(',','_').replace('[','_').replace(']','_')
-scr_dir    = base_dir + '/' + name+year+'/'
-os.system('mkdir -p ' + scr_dir)
-pickname = scr_dir + name+year+bbox_txt+'.pik2'
-f = open(pickname, 'wb')
-pickle.dump(all_data,f,protocol=2)
-
-
-# back up script file
-args=sys.argv
-scr_name = args[0]
-os.system('cp -fr  '+scr_name +'    '+scr_dir)
-
-
-
-
-with open(pick, "rb") as f:
-    w = pickle.load(f)
-
-f = open(pick, "rb")
-w = pickle.load(f)
-
-
-
-
-
-
-
-###############3
-## Other useful functions
-
+#################
 def coops_list_datatypes():
     # TODO: Get from GetCaps
     return ["PreliminarySixMinute",
@@ -313,6 +432,7 @@ def coops_list_datatypes():
             "HourlyTidePredictions",
             "HighLowTidePredictions"]
 
+#################
 def coops_list_datums():
     # TODO: Get from GetCaps
     return ["MLLW",
@@ -322,6 +442,7 @@ def coops_list_datums():
             "IGLD",
             "NAVD"]
 
+#################
 def coops_list_observedPropertys():    
     return [
         "air_temperature",
@@ -343,7 +464,7 @@ def coops_list_observedPropertys():
         "visibility"]
 
 
-
+#################
 def get_coops_stations_info(type = 'wlev'):
     """
     table coops meteo stations
@@ -393,8 +514,18 @@ def get_coops_stations_info(type = 'wlev'):
         data=tab[:],
         columns=['Station ID', 'Station Name', 'Deployed' , 'Latitude' , 'Longitude'],
     ).set_index('Station ID')
+    
+    
+    
+    for col in df.columns:
+         try:
+             df[col]  = df[col].astype('float64') 
+         except:
+             pass
+
     return df
 
+#################
 def get_ndbc_stations_info(type = 'wave'):
     """
     https://sdf.ndbc.noaa.gov/stations.shtml
@@ -441,8 +572,60 @@ def get_ndbc_stations_info(type = 'wave'):
     else:
         sys.exit(' ERORR: Not implemeted yet ..')  
 
+
+    for col in df.columns:
+         try:
+             df[col]  = df[col].astype('float64') 
+         except:
+             pass
+
+
     return df
 
+#################
+def get_mask(bbox,lons,lats):
+    mask     =    ~(( lons > bbox[0]) & 
+                    ( lons < bbox[2]) & 
+                    ( lats > bbox[1]) & 
+                    ( lats < bbox[3]))
+    
+    return mask
+
+#################
+def obs_station_list_gen(bbox = [-99.0, 5.0, -52.8, 46.3]):
+    """
+    bbox for HSOF mesh
+    """
+    
+    out_dir = 'inp/obs_locs/'
+    os.system('mkdir -p ' + out_dir )
+    
+    coops_wlev_stations = get_coops_stations_info(type = 'wlev')
+    coops_mete_stations = get_coops_stations_info(type = 'mete')
+    ndbc_wave_stations  = get_ndbc_stations_info(type = 'wave')
+    ndbc_wind_stations  = get_ndbc_stations_info(type = 'wind')
+
+
+    coops_wlev_stations = coops_wlev_stations  [get_mask(bbox,coops_wlev_stations.Longitude,coops_wlev_stations.Latitude)]
+    coops_mete_stations = coops_mete_stations  [get_mask(bbox,coops_mete_stations.Longitude,coops_mete_stations.Latitude)]
+    ndbc_wave_stations  = ndbc_wave_stations   [get_mask(bbox,ndbc_wave_stations .Longitude,ndbc_wave_stations .Latitude)]
+    ndbc_wind_stations  = ndbc_wind_stations   [get_mask(bbox,ndbc_wind_stations.Longitude,ndbc_wind_stations.Latitude)]
+
+    print (' > Generating coops and ndbc list files ..')
+    coops_wlev_stations.to_csv(out_dir + 'coops_wlev_stations_hsofs.csv')
+    coops_mete_stations.to_csv(out_dir + 'coops_mete_stations_hsofs.csv')
+
+    ndbc_wave_stations.to_csv(out_dir + 'ndbc_wave_stations_hsofs.csv')
+    ndbc_wind_stations.to_csv(out_dir + 'ndbc_wind_stations_hsofs.csv')
+#################
+
+
+
+
+
+
+if __name__ == "__main__":
+    obs_station_list_gen()
 
 
 
@@ -458,6 +641,35 @@ def get_ndbc_stations_info(type = 'wave'):
 
 
 
+def test():
+
+
+    base_dir = '/disks/NASARCHIVE/saeed_moghimi/data/coops_obs_pyoos/'
+
+
+
+    # OOI Endurance Array bounding box# OOI E 
+    bbox = [-127, 43, -123.75, 48]
+    #South Florida
+    bbox = [-87 , 24, -79, 30]  
+
+    #hsofs
+    bbox = [-99.0, 5.0, -52.8, 46.3]
+    #bbox = [ -82.0, 23.0 , -67.0, 43.6]
+    #bbox = [ -79.0 ,32.0 , -69.0, 42.0]
+    bbox = [ -77.0 ,37.0 , -70.0, 42.0]
+
+                    
+
+    #sandy 
+    start_dt =  datetime.datetime(2012,10,22)
+    end_dt   =  datetime.datetime(2012,11,4)
+
+
+
+    #Sandy
+    name = 'sandy'
+    year = '2012'
 
 
 
@@ -465,49 +677,75 @@ def get_ndbc_stations_info(type = 'wave'):
 
 
 
+    path              = download_nhc_gis_best_track(year,code)
+    line,points,radii = read_gis_best_track(base,code)
 
 
 
 
 
+    print('  > Get wind ocean information (ndbc)')
+    wnd_ocn, wnd_ocn_table = get_ndbc(
+        start=start_dt,
+        end=end_dt,
+        sos_name='winds',
+        bbox=bbox,
+        )
+
+    print('  > Get wave ocean information (ndbc)')
+    wav_ocn, wav_ocn_table = get_ndbc(
+        start=start_dt,
+        end=end_dt,
+        sos_name='waves',
+        bbox=bbox,
+        )
+
+
+    print('  > Get water level information  CO-OPS')
+    ssh, ssh_table = get_coops(
+        start=start_dt,
+        end=end_dt,
+        sos_name='water_surface_height_above_reference_datum',
+        units=cf_units.Unit('meters'),
+        datum = 'MSL',
+        bbox=bbox,
+    )
+
+    print('  > Get wind information CO-OPS')
+    wnd_obs, wnd_obs_table = get_coops(
+        start=start_dt,
+        end=end_dt,
+        sos_name='wind_speed',
+        units=cf_units.Unit('m/s'),
+        bbox=bbox,
+        )
+
+
+    all_data = dict(wnd_ocn =wnd_ocn   , wnd_ocn_table = wnd_ocn_table,
+                    wav_ocn = wav_ocn  , wav_ocn_table = wav_ocn_table,
+                    ssh     =  ssh     , ssh_table     = ssh_table,
+                    wnd_obs =  wnd_obs , wnd_obs_table = wnd_obs_table)
+
+
+    bbox_txt = str(bbox).replace(' ','_').replace(',','_').replace('[','_').replace(']','_')
+    scr_dir    = base_dir + '/' + name+year+'/'
+    os.system('mkdir -p ' + scr_dir)
+    pickname = scr_dir + name+year+bbox_txt+'.pik2'
+    f = open(pickname, 'wb')
+    pickle.dump(all_data,f,protocol=2)
+
+
+    # back up script file
+    args=sys.argv
+    scr_name = args[0]
+    os.system('cp -fr  '+scr_name +'    '+scr_dir)
 
 
 
 
-coops_wlev_stations = get_coops_stations_info(type = 'wlev')
-coops_mete_stations = get_coops_stations_info(type = 'mete')
-ndbc_wave_stations  = get_ndbc_stations_info(type = 'wave')
-ndbc_wind_stations  = get_ndbc_stations_info(type = 'wind')
 
+    with open(pick, "rb") as f:
+        w = pickle.load(f)
 
-
-
-
-
-
-
-
-
-"""
-
-
-import xml.etree.cElementTree as et
-
-base_dir = '/data01/data01/01-projects/07-NOAA-CoastalAct/04-working/03-read_wave_data/'
-
-
-url   = 'https://tidesandcurrents.noaa.gov/mdapi/v0.6/webapi/'
-fname = 'stations.xml'
-wget.download(url+fname, out = base_dir)
-
-parsed_xml = et.parse(base_dir+fname )
-
-for node in parsed_xml.getroot():
-    print node.text
-
-coops2df
-df = coops2df()
-
-
-
-"""
+    f = open(pick, "rb")
+    w = pickle.load(f)
