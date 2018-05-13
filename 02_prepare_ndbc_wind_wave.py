@@ -113,6 +113,8 @@ for key in base_info.cases.keys():
             press[:,ip] = pres[:,i]  
         
         wind_out_fname = base_info.cases[key]['dir'] + '/01_wind_on_ndbc_obs.nc'
+        print (wind_out_fname)
+        
         nc = n4.Dataset(wind_out_fname,'w')
          
         nc.Description = 'Wind model for obs locations'
@@ -121,8 +123,9 @@ for key in base_info.cases.keys():
          
         # DIMENSIONS #
        
-        nc.createDimension('time', nt_wind)
+        nc.createDimension('time', None)
         nc.createDimension('station'   , nloc_wind)
+
         
         time1       = nc.createVariable(varname = 'time', datatype='f8', dimensions=('time',))
         time1.units = ncvw['time'].units
@@ -139,6 +142,7 @@ for key in base_info.cases.keys():
         
         nc.close()
         ncw.close()
+        #sys.exit()
     
     wave_inp = glob.glob(base_info.cases[key]['dir'] +'/inp_wavdata/*')
     if len(wave_inp) > 0:
@@ -179,9 +183,8 @@ for key in base_info.cases.keys():
         nc.Created = datetime.datetime.now().isoformat()
          
         # DIMENSIONS #
-        nc.createDimension('time', len(wave_dates))
+        nc.createDimension('time', None)
         nc.createDimension('station'   , nloc_wave)
-        
 
         time1       = nc.createVariable(varname = 'time', datatype='f8', dimensions=('time',))
         time1.units = ncvh['time'].units
@@ -196,7 +199,39 @@ for key in base_info.cases.keys():
         nc.close()
         nch.close()
 
+
+
+
+
+print ('Organize and copy files ...')
+
+out_dir = '/scratch4/COASTAL/coastal/noscrub/Saeed.Moghimi/stmp10_sandy/z01_4web_plot/' + base_info.storm_name+'/'
+
+
+for key in np.sort(base_info.cases.keys()):
+    subdir = key +'.'+ base_info.cases[key]['label'] +'.'+ base_info.cases[key]['dir'].split('/')[-2] + '/'
+    print (subdir)
+    out_dir_case = out_dir + subdir
+    os.system('mkdir -p ' +  out_dir_case)
+    
+    
+    fnames = [
+        base_info.cases[key]['dir']+ '/maxele.63.nc',
+        base_info.cases[key]['dir']+ '/01_wave_on_ndbc_obs.nc',
+        base_info.cases[key]['dir']+ '/01_wind_on_ndbc_obs.nc',
+        base_info.cases[key]['dir']+ '/fort_wind.61.nc',
+        ]
+    
+    for fname in fnames:
+        os.system('cp -fv ' + fname + ' ' +  out_dir_case  )
+
+# back up script file
+args=sys.argv
+scr_name = args[0]
+os.system('cp -fr  '+scr_name +'     '+out_dir_case)
+
 print ('Finish ...')
+
 
 
 
