@@ -456,26 +456,29 @@ def get_station_wnd(fort61):
     return mod,mod_table
 
 
-def get_station_wave(wav_at_nbdc):
+def get_station_wave(wav_at_nbdc,wav_ocn_table):
     """
     Read model wave
     
     """
     nc0      = netCDF4.Dataset(wav_at_nbdc)
     ncv0     = nc0.variables 
-    sta_lon  = ncv0['x'][:]
-    sta_lat  = ncv0['y'][:]
-    sta_nam  = ncv0['station_name'][:].squeeze()
-    sta_wnd =  np.sqrt ( ncv0['uwnd'] [:].squeeze() ** 2 +  ncv0['vwnd']        [:].squeeze() ** 2 )
+    sta_ =  ncv0['hsig'] [:].squeeze()
     sta_date = netCDF4.num2date(ncv0['time'][:], ncv0['time'].units)
+    nc0.close()
 
+    sta_nam  = ncv0['station_name'][:].squeeze()
+    sta_lon  = ncv0['lo'][:]
+    sta_lat  = ncv0['y'][:]
+
+    
     stationIDs = []
     mod    = []
     ind = np.arange(len(sta_lat))
     for ista in ind:
         stationID = sta_nam[ista].tostring().decode().rstrip()
         stationIDs.append(stationID)
-        mod_tmp = pd.DataFrame(data = np.c_[sta_date,sta_wnd[:,ista]],
+        mod_tmp = pd.DataFrame(data = np.c_[sta_date,sta_hsig[:,ista]],
                                columns = ['date_time', 'wnd' ]).set_index('date_time')
         mod_tmp._metadata = stationID
         mod.append(mod_tmp)
@@ -766,7 +769,7 @@ except:
 ############# Wave obs and model analysis ########################
 try:
     #read wind model data
-    wav_mod,wav_mod_table = get_station_wave(wav_at_nbdc)
+    wav_mod,wav_mod_table = get_station_wave(wav_at_nbdc,wav_ocn_table)
 
     # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
     commonwav  = set(wav_obs_table['station_code']).intersection(wav_mod_table  ['station_code'].values)
