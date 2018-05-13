@@ -765,7 +765,6 @@ except:
 
 ############# Wave obs and model analysis ########################
 try:
-    
     #read wind model data
     wav_mod,wav_mod_table = get_station_wave(wav_at_nbdc)
 

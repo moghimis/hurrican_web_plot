@@ -105,7 +105,7 @@ for key in base_info.cases.keys():
         #
         lons = wind_sta.Longitude
         lats = wind_sta.Latitude
-        
+        sat_names = wave_sta['Station ID'][:]
         for ip in range(len(lons)):
             [i],prox = find_nearest1d(xvec = lonw,yvec = latw, xp = lons[ip],yp = lats[ip])
             uwnds[:,ip] = uwnd[:,i]   
@@ -126,6 +126,10 @@ for key in base_info.cases.keys():
         nc.createDimension('time', None)
         nc.createDimension('station'   , nloc_wind)
 
+        nc.createDimension('namelen'   ,  50 )
+
+        name1       = nc.createVariable(varname = 'station_name', datatype='char', dimensions=('station','namelen',))
+        name1[:]    = sta_names[:]
         
         time1       = nc.createVariable(varname = 'time', datatype='f8', dimensions=('time',))
         time1.units = ncvw['time'].units
@@ -142,7 +146,7 @@ for key in base_info.cases.keys():
         
         nc.close()
         ncw.close()
-        #sys.exit()
+        sys.exit()
     
     wave_inp = glob.glob(base_info.cases[key]['dir'] +'/inp_wavdata/*')
     if len(wave_inp) > 0:
@@ -185,6 +189,17 @@ for key in base_info.cases.keys():
         # DIMENSIONS #
         nc.createDimension('time', None)
         nc.createDimension('station'   , nloc_wave)
+        nc.createDimension('namelen'   ,  50 )
+
+        name1      = nc.createVariable(varname = '', datatype='char', dimensions=('station','namelen',))
+        name1[:]   = sta_names
+
+        
+        lon1       = nc.createVariable(varname = 'lon', datatype='f8', dimensions=('station',))
+        lon1[:]    =   lons [:]
+
+        lat1       = nc.createVariable(varname = 'lat', datatype='f8', dimensions=('station',))
+        lat1[:]    = lats [:]
 
         time1       = nc.createVariable(varname = 'time', datatype='f8', dimensions=('time',))
         time1.units = ncvh['time'].units
@@ -201,7 +216,7 @@ for key in base_info.cases.keys():
 
 
 
-
+"""
 
 print ('Organize and copy files ...')
 
@@ -236,9 +251,58 @@ print ('Finish ...')
 
 
 #
+from netCDF4 import Dataset, stringtochar, chartostring
+import random, numpy
+
+# test utilities for converting arrays of fixed-length strings
+# to arrays of characters (with an extra dimension), and vice-versa.
+
+# netCDF does not have a fixed-length string data-type (only characters
+# and variable length strings). The convenience function chartostring
+# converts an array of characters to an array of fixed-length strings.
+# The array of fixed length strings has one less dimension, and the
+# length of the strings is equal to the rightmost dimension of the
+# array of characters. The convenience function stringtochar goes
+# the other way, converting an array of fixed-length strings to an
+# array of characters with an extra dimension (the number of characters
+# per string) appended on the right.
+
+
+FILE_NAME = 'tst_stringarr.nc'
+FILE_FORMAT = 'NETCDF4_CLASSIC'
+chars = '1234567890aabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+nc = Dataset(FILE_NAME,'w',format=FILE_FORMAT)
+n2 = 10; nchar = 12; nrecs = 4
+nc.createDimension('n1',None)
+nc.createDimension('n2',n2)
+nc.createDimension('nchar',nchar)
+v = nc.createVariable('strings','S1',('n1','n2','nchar'))
+for nrec in range(nrecs):
+    data = []
+    data = numpy.empty((n2,),'S'+repr(nchar))
+    # fill data with random nchar character strings
+    for n in range(n2):
+        data[n] = ''.join([random.choice(chars) for i in range(nchar)])
+    print(nrec,data)
+    # convert data to array of characters with an extra dimension
+    # (the number of characters per string) added to the right.
+    datac = stringtochar(data)
+    v[nrec] = datac
+nc.close()
+
+nc = Dataset(FILE_NAME)
+v = nc.variables['strings']
+print(v.shape, v.dtype)
+for nrec in range(nrecs):
+    # read character array back, convert to an array of strings
+    # of length equal to the rightmost dimension.
+    print(nrec, chartostring(v[nrec]))
+nc.close()
 
 
 
 
 
 
+"""
