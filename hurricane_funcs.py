@@ -36,6 +36,8 @@ from io import BytesIO
 from ioos_tools.ioos import collector2table
 import pickle 
 
+from glob import glob
+
 try:
     from urllib.request import urlopen, urlretrieve
 except:
@@ -165,7 +167,7 @@ def download_nhc_gis_files(hurricane_gis_files):
 # See https://gitter.im/binder-project/binder?at=59bc2498c101bc4e3acfc9f1
 os.environ['CPL_ZIP_ENCODING'] = 'UTF-8'
 
-def read_advisory_cones_info(hurricane_gis_files,base):
+def read_advisory_cones_info(hurricane_gis_files,base,year,code):
     print('  >  Read cones shape file ...')
 
     cones, points = [], []

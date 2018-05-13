@@ -127,9 +127,23 @@ def main():
     bbox_txt = str(bbox).replace(' ','_').replace(',','_').replace('[','_').replace(']','_')
     scr_dir    = base_dir + '/' + name+year+'/'
     os.system('mkdir -p ' + scr_dir)
+
+   
     pickname = scr_dir + name + year + bbox_txt.replace('(','_').replace(')','_') + '.pik2'
     f = open(pickname, 'wb')
     pickle.dump(all_data,f,protocol=2)
+    f.close()
+    
+   
+    pickname = scr_dir + name + year + bbox_txt.replace('(','_').replace(')','_') + '.pik3'
+    f = open(pickname, 'wb')
+    pickle.dump(all_data,f)
+    f.close()
+
+
+
+
+    
     #
     # back up script file
     args=sys.argv
