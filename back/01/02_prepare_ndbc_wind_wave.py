@@ -96,7 +96,7 @@ for key in base_info.cases.keys():
         pres = ncvw['P']   [:]
         wind_dates = n4.num2date(ncvw['time'][:],units=ncvw['time'].units)
         nt_wind = len(wind_dates)
-
+        ncw.close()
         
         #
         uwnds = np.zeros ((nt_wind,nloc_wind))
@@ -123,11 +123,6 @@ for key in base_info.cases.keys():
        
         nc.createDimension('time', nt_wind)
         nc.createDimension('station'   , nloc_wind)
-        
-        time1       = nc.createVariable(varname = 'time', datatype='f8', dimensions=('time',))
-        time1.units = ncvw['time'].units
-        time1[:]    = ncvw['time'][:]  
-        
          
         uwind1 =  nc.createVariable(varname = 'uwnd', datatype='f8', dimensions=('time','station',))
         vwind1 =  nc.createVariable(varname = 'vwnd', datatype='f8', dimensions=('time','station',))
@@ -138,7 +133,7 @@ for key in base_info.cases.keys():
         press1[:,:] = press[:,:]
         
         nc.close()
-        ncw.close()
+    
     
     wave_inp = glob.glob(base_info.cases[key]['dir'] +'/inp_wavdata/*')
     if len(wave_inp) > 0:
@@ -150,10 +145,9 @@ for key in base_info.cases.keys():
         ncvh = nch.variables 
         lonh = ncvh['longitude'][:]
         lath = ncvh['latitude' ][:]
-        hsig = ncvh['hs'][:]
-        
+        hsig   = ncvh['hs'][:]
         wave_dates = n4.num2date(ncvh['time'][:],units=ncvh['time'].units)
-
+        nch.close()
         #
         ncd  = n4.Dataset(wdir_inp,'r')
         ncvd = ncd.variables 
@@ -181,12 +175,7 @@ for key in base_info.cases.keys():
         # DIMENSIONS #
         nc.createDimension('time', len(wave_dates))
         nc.createDimension('station'   , nloc_wave)
-        
-
-        time1       = nc.createVariable(varname = 'time', datatype='f8', dimensions=('time',))
-        time1.units = ncvh['time'].units
-        time1[:]    = ncvh['time'][:]  
-  
+         
         uwind1 =  nc.createVariable(varname = 'hsig', datatype='f8', dimensions=('time','station',))
         vwind1 =  nc.createVariable(varname = 'wdir', datatype='f8', dimensions=('time','station',))
         
@@ -194,9 +183,12 @@ for key in base_info.cases.keys():
         vwind1[:,:] = wdirs[:,:]
         
         nc.close()
-        nch.close()
+        
+
 
 print ('Finish ...')
+
+
 
 
 
