@@ -39,7 +39,6 @@ def find_nearest1d(xvec,yvec,xp,yp):
     In: xvec, yvec of the grid and xp,yp of the point of interst
     Retun: i,j,proximity of the nearset grid point
     """
-
     dist = np.sqrt((xvec-xp)**2+(yvec-yp)**2)
     i = np.where(dist==dist.min())
     return i[0],dist.min()
@@ -103,9 +102,9 @@ for key in base_info.cases.keys():
         vwnds = np.zeros_like(uwnds)
         press = np.zeros_like(uwnds)  
         #
-        lons = wind_sta.Longitude
-        lats = wind_sta.Latitude
-        sat_names = wave_sta['Station ID'][:]
+        lons    = wind_sta.Longitude
+        lats    = wind_sta.Latitude
+        sat_lab = wind_sta['Station ID'][:]
         for ip in range(len(lons)):
             [i],prox = find_nearest1d(xvec = lonw,yvec = latw, xp = lons[ip],yp = lats[ip])
             uwnds[:,ip] = uwnd[:,i]   
@@ -125,17 +124,25 @@ for key in base_info.cases.keys():
        
         nc.createDimension('time', None)
         nc.createDimension('station'   , nloc_wind)
-
         nc.createDimension('namelen'   ,  50 )
 
-        name1       = nc.createVariable(varname = 'station_name', datatype='char', dimensions=('station','namelen',))
-        name1[:]    = sta_names[:]
+        name1       = nc.createVariable(varname = 'station_name', datatype='S1', dimensions=('station','namelen',))
+        for ista in range(len(sat_lab)):
+            label =  sat_lab[ista]
+            #print (label)
+            for ich in range(len(label)):
+                name1[ista,ich]    = label[ich]
         
         time1       = nc.createVariable(varname = 'time', datatype='f8', dimensions=('time',))
         time1.units = ncvw['time'].units
         time1[:]    = ncvw['time'][:]  
-        
          
+        lon1       = nc.createVariable(varname = 'lon', datatype='f8', dimensions=('station',))
+        lon1[:]    =   lons.values [:]
+
+        lat1       = nc.createVariable(varname = 'lat', datatype='f8', dimensions=('station',))
+        lat1[:]    = lats.values [:]
+                 
         uwind1 =  nc.createVariable(varname = 'uwnd', datatype='f8', dimensions=('time','station',))
         vwind1 =  nc.createVariable(varname = 'vwnd', datatype='f8', dimensions=('time','station',))
         press1 =  nc.createVariable(varname = 'pres', datatype='f8', dimensions=('time','station',))
@@ -146,7 +153,7 @@ for key in base_info.cases.keys():
         
         nc.close()
         ncw.close()
-        sys.exit()
+        #sys.exit()
     
     wave_inp = glob.glob(base_info.cases[key]['dir'] +'/inp_wavdata/*')
     if len(wave_inp) > 0:
@@ -171,6 +178,7 @@ for key in base_info.cases.keys():
         
         lons = wave_sta.Longitude
         lats = wave_sta.Latitude
+        sat_lab = wave_sta['Station ID'][:]
         hsigs = np.zeros ((len(wave_dates),nloc_wave))
         wdirs = np.zeros_like(hsigs)
         
@@ -191,15 +199,19 @@ for key in base_info.cases.keys():
         nc.createDimension('station'   , nloc_wave)
         nc.createDimension('namelen'   ,  50 )
 
-        name1      = nc.createVariable(varname = '', datatype='char', dimensions=('station','namelen',))
-        name1[:]   = sta_names
+        name1       = nc.createVariable(varname = 'station_name', datatype='S1', dimensions=('station','namelen',))
+        for ista in range(len(sat_lab)):
+            label =  sat_lab[ista]
+            print (label)
+            for ich in range(len(label)):
+                name1[ista,ich]    = label[ich]
 
         
         lon1       = nc.createVariable(varname = 'lon', datatype='f8', dimensions=('station',))
-        lon1[:]    =   lons [:]
+        lon1[:]    =   lons.values [:]
 
         lat1       = nc.createVariable(varname = 'lat', datatype='f8', dimensions=('station',))
-        lat1[:]    = lats [:]
+        lat1[:]    = lats.values [:]
 
         time1       = nc.createVariable(varname = 'time', datatype='f8', dimensions=('time',))
         time1.units = ncvh['time'].units
@@ -215,11 +227,7 @@ for key in base_info.cases.keys():
         nch.close()
 
 
-
-"""
-
 print ('Organize and copy files ...')
-
 out_dir = '/scratch4/COASTAL/coastal/noscrub/Saeed.Moghimi/stmp10_sandy/z01_4web_plot/' + base_info.storm_name+'/'
 
 
@@ -249,60 +257,3 @@ print ('Finish ...')
 
 
 
-
-#
-from netCDF4 import Dataset, stringtochar, chartostring
-import random, numpy
-
-# test utilities for converting arrays of fixed-length strings
-# to arrays of characters (with an extra dimension), and vice-versa.
-
-# netCDF does not have a fixed-length string data-type (only characters
-# and variable length strings). The convenience function chartostring
-# converts an array of characters to an array of fixed-length strings.
-# The array of fixed length strings has one less dimension, and the
-# length of the strings is equal to the rightmost dimension of the
-# array of characters. The convenience function stringtochar goes
-# the other way, converting an array of fixed-length strings to an
-# array of characters with an extra dimension (the number of characters
-# per string) appended on the right.
-
-
-FILE_NAME = 'tst_stringarr.nc'
-FILE_FORMAT = 'NETCDF4_CLASSIC'
-chars = '1234567890aabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
-nc = Dataset(FILE_NAME,'w',format=FILE_FORMAT)
-n2 = 10; nchar = 12; nrecs = 4
-nc.createDimension('n1',None)
-nc.createDimension('n2',n2)
-nc.createDimension('nchar',nchar)
-v = nc.createVariable('strings','S1',('n1','n2','nchar'))
-for nrec in range(nrecs):
-    data = []
-    data = numpy.empty((n2,),'S'+repr(nchar))
-    # fill data with random nchar character strings
-    for n in range(n2):
-        data[n] = ''.join([random.choice(chars) for i in range(nchar)])
-    print(nrec,data)
-    # convert data to array of characters with an extra dimension
-    # (the number of characters per string) added to the right.
-    datac = stringtochar(data)
-    v[nrec] = datac
-nc.close()
-
-nc = Dataset(FILE_NAME)
-v = nc.variables['strings']
-print(v.shape, v.dtype)
-for nrec in range(nrecs):
-    # read character array back, convert to an array of strings
-    # of length equal to the rightmost dimension.
-    print(nrec, chartostring(v[nrec]))
-nc.close()
-
-
-
-
-
-
-"""
