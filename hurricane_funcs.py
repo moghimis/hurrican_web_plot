@@ -624,6 +624,70 @@ def obs_station_list_gen(bbox = [-99.0, 5.0, -52.8, 46.3]):
 #################
 
 
+def write_csv(base_dir, name, year, table, data, label):
+    """
+    examples
+    print('  > write csv files')
+    write_csv(base_dir, name, year, table=wnd_ocn_table, data= wnd_ocn , label='ndbc_wind' )
+    write_csv(base_dir, name, year, table=wav_ocn_table, data= wav_ocn , label='ndbc_wave' )
+    write_csv(base_dir, name, year, table=ssh_table    , data= ssh     , label='coops_ssh' )
+    write_csv(base_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
+    
+    """
+
+
+    #label   = 'coops_ssh'
+    #out_dir =  os.path.join(base_dir,name+year) 
+    #table   = ssh_table
+    #data    = ssh
+
+    outt    = os.path.join(base_dir,label)
+    outd    = os.path.join(outt,'data')  
+    if not os.path.exists(outd):
+        os.makedirs(outd)
+
+    table.to_csv(os.path.join(outt,'table.csv'))
+    stations = table['station_code']
+
+    for ista in range(len(stations)):
+        sta   = stations [ista]
+        fname = os.path.join(outd,sta)+'.csv'
+        data[ista].to_csv(fname)
+        
+        fmeta    = os.path.join(outd,sta)+'_metadata.csv'
+        metadata = pd.DataFrame.from_dict( data[ista]._metadata , orient="index")
+        metadata.to_csv(fmeta)
+     
+
+def read_csv(base_dir, name, year, label):
+    """
+    examples
+    print('  > write csv files')
+    write_csv(base_dir, name, year, table=wnd_ocn_table, data= wnd_ocn , label='ndbc_wind' )
+    write_csv(base_dir, name, year, table=wav_ocn_table, data= wav_ocn , label='ndbc_wave' )
+    write_csv(base_dir, name, year, table=ssh_table    , data= ssh     , label='coops_ssh' )
+    write_csv(base_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
+    
+    """
+    outt    = os.path.join(base_dir,label)
+    outd    = os.path.join(outt,'data')  
+    if not os.path.exists(outd):
+       sys.exit('ERROR',outd )
+
+    table = pd.read_csv(os.path.join(outt,'table.csv'))
+    stations = table['station_code']
+
+    data     = []
+    metadata = []
+    for ista in range(len(stations)):
+        sta   = stations [ista]
+        fname = os.path.join(outd,sta)+'.csv'
+        data.append(pd.read_csv(fname))
+    
+        fmeta = os.path.join(outd,sta) + '_metadata.csv'
+        metadata.append(pd.read_csv(fmeta))
+        
+    return table,data,metadata
 
 
 

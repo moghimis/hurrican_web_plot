@@ -48,29 +48,10 @@ from hurricane_funcs import *
 
 import arrow
 
-
-def write_csv(base_dir, name, year, table, data, label):
-    #label   = 'coops_ssh'
-    #out_dir =  os.path.join(base_dir,name+year) 
-    #table   = ssh_table
-    #data    = ssh
-
-    outt    = os.path.join(out_dir,label)
-    outd    = os.path.join(outt,'data')  
-    if not os.path.exists(outd):
-        os.makedirs(outd)
-
-    table.to_csv(os.path.join(outt,'table.csv'))
-    stations = table['station_code']
-
-    for ista in range(len(stations)):
-        sta   = stations [ista]
-        fname = os.path.join(outd,sta)+'.csv'
-        data[ista].to_csv(fname)
-
         
-
-obs_station_list_gen()
+if False:
+    # not needed. will take from the storm specific obs list from coops and ndbc
+    obs_station_list_gen()
 
 
 
@@ -143,7 +124,6 @@ wav_ocn, wav_ocn_table = get_ndbc(
     bbox=bbox,
     )
 
-
 print('  > write csv files')
 write_csv(base_dir, name, year, table=wnd_ocn_table, data= wnd_ocn , label='ndbc_wind' )
 write_csv(base_dir, name, year, table=wav_ocn_table, data= wav_ocn , label='ndbc_wave' )
@@ -153,10 +133,10 @@ write_csv(base_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coop
 
 print('  > write pickle files')
 #####
-all_data = dict(wnd_ocn =wnd_ocn   , wnd_ocn_table = wnd_ocn_table,
+all_data = dict(wnd_ocn = wnd_ocn  , wnd_ocn_table = wnd_ocn_table,
                 wav_ocn = wav_ocn  , wav_ocn_table = wav_ocn_table,
-                ssh     =  ssh     , ssh_table     = ssh_table,
-                wnd_obs =  wnd_obs , wnd_obs_table = wnd_obs_table)
+                ssh     = ssh      , ssh_table     = ssh_table,
+                wnd_obs = wnd_obs  , wnd_obs_table = wnd_obs_table)
 
 #####
 bbox_txt = str(bbox).replace(' ','_').replace(',','_').replace('[','_').replace(']','_')

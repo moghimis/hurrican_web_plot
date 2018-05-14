@@ -452,12 +452,12 @@ def get_station_wnd(fort61):
         mod.append(mod_tmp)
 
     stationIDs = np.array(stationIDs)
-    mod_table = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
-   
-    return mod,mod_table
+    mod_table1 = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
+    nc0.close()
+    return mod,mod_table1
 
 
-def get_station_wave(wav_at_nbdc,wav_ocn_table):
+def get_station_wave(wav_at_nbdc):
     """
     Read model wave
     
@@ -476,7 +476,7 @@ def get_station_wave(wav_at_nbdc,wav_ocn_table):
     mod    = []
     ind = np.arange(len(sta_lat))
     for ista in ind:
-        stationID = sta_nam[ista][~sta_nam.mask[ista]].tostring()
+        stationID = sta_nam[ista][~sta_nam.mask[ista]].tostring().decode()
         stationIDs.append(stationID)
         mod_tmp = pd.DataFrame(data = np.c_[sta_date,sta_hsig[:,ista]],
                                columns = ['date_time', 'hsig' ]).set_index('date_time')
@@ -709,22 +709,33 @@ print('bbox: {}\nstart: {}\n  end: {}'.format(strbbox, start, end))
 ############################################################
 # read data
 
-pickname = 'obs//SANDY2012/SANDY2012_-82.69999694824219__10.600000381469727__-68.5__43.5_.pik3'
-f = open(pickname, "rb")
-all_data = pickle.load(f)
+read_pickle = False
+if read_pickle:
+    print (' read from pickle')
+    pickname = 'obs//SANDY2012/SANDY2012_-82.69999694824219__10.600000381469727__-68.5__43.5_.pik3'
+    f = open(pickname, "rb")
+    all_data = pickle.load(f)
+
+    ssh             = all_data['ssh']
+    ssh_table       = all_data['ssh_table']
+    #
+    wnd_obs         = all_data['wnd_obs']
+    wnd_obs_table   = all_data['wnd_obs_table']
+    #
+    wav_ocn         = all_data['wav_ocn']
+    wav_ocn_table   = all_data['wav_ocn_table']
+    #
+    wnd_ocn         = all_data['wnd_ocn']
+    wnd_ocn_table   = all_data['wnd_ocn_table']
+else:
+    base_dir = 'obs/'
+    print (' read from CSV files')
+    ssh_table,ssh          = read_csv (base_dir, name, year, label='coops_ssh' )
+    wnd_obs_table,wnd_obs  = read_csv (base_dir, name, year, label='coops_wind')
+    wnd_ocn_table,wnd_ocn  = read_csv (base_dir, name, year, label='ndbc_wind' )
+    wav_ocn_table, wav_ocn, wav_ocn_meta  = read_csv (base_dir, name, year, label='ndbc_wave' )
 
 
-ssh             = all_data['ssh']
-ssh_table       = all_data['ssh_table']
-#
-wnd_obs         = all_data['wnd_obs']
-wnd_obs_table   = all_data['wnd_obs_table']
-#
-wav_ocn         = all_data['wav_ocn']
-wav_ocn_table   = all_data['wav_ocn_table']
-#
-wnd_ocn         = all_data['wnd_ocn']
-wnd_ocn_table   = all_data['wnd_ocn_table']
 
 ############################################################
 ########### Read SSH data
@@ -820,15 +831,24 @@ except:
 ############# Wave NDBC obs and model analysis ########################
 try:
     #read wave model data
-    wav_mod,wav_mod_table = get_station_wave(wav_at_nbdc,wav_ocn_table)
+    wav_mod,wav_mod_table = get_station_wave(wav_at_nbdc)
 
     # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
-    commonwav  = set(wav_ocn_table['station_code'].values).intersection(wav_mod_table  ['station_code'].values)
+    df = wav_ocn_table
+    for col in df.columns:
+        try:
+            df[col]  = df[col].astype('S21') 
+        except:
+            pass
+    #wav_ocn_table ['station_code'] = wav_ocn_table['station_code'].astype('str')
+    #wav_mod_table ['station_code'] = wav_mod_table['station_code'].astype('str') 
+    
+    commonwav  = set(wav_ocn_table['station_code']).intersection(wav_mod_table['station_code'].values)
 
-    wav_obs, wav_mod = [], []
+    wav_ocns, wav_mods = [], []
     for station in commonwav:
-        wav_obs.extend([obs for obs in wav_obs   if obs._metadata['station_code'] == station])
-        wav_mod.extend([obm for obm in wav_mod   if obm._metadata                 == station])
+        wav_ocns.extend([obs for obs in wav_ocn   if obs._metadata['station_code'] == station])
+        wav_mods.extend([obm for obm in wav_mod   if obm._metadata                 == station])
 
     index = pd.date_range(
         start = start_dt.replace(tzinfo=None),
