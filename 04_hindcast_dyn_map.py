@@ -73,7 +73,8 @@ from geopandas import GeoDataFrame
 import pickle
 
 try:
-    os.system('rm __pycache__/hurricane_funcs*'  )
+    os.system('rm __pycache__/hurricane_funcs*.pyc'  )
+    os.system('rm hurricane_funcs*.pyc'  )
 except:
     pass
 if 'hurricane_funcs' in sys.modules:  
@@ -463,31 +464,28 @@ def get_station_wave(wav_at_nbdc,wav_ocn_table):
     """
     nc0      = netCDF4.Dataset(wav_at_nbdc)
     ncv0     = nc0.variables 
-    sta_ =  ncv0['hsig'] [:].squeeze()
+    sta_hsig =  ncv0['hsig'] [:].squeeze()
+    sta_hsig [sta_hsig > 1e3 ] = 0.0
     sta_date = netCDF4.num2date(ncv0['time'][:], ncv0['time'].units)
-    nc0.close()
-
     sta_nam  = ncv0['station_name'][:].squeeze()
-    sta_lon  = ncv0['lo'][:]
-    sta_lat  = ncv0['y'][:]
-
+    sta_lon  = ncv0['lon'][:]
+    sta_lat  = ncv0['lat'][:]
+    nc0.close()
     
     stationIDs = []
     mod    = []
     ind = np.arange(len(sta_lat))
     for ista in ind:
-        stationID = sta_nam[ista].tostring().decode().rstrip()
+        stationID = sta_nam[ista][~sta_nam.mask[ista]].tostring()
         stationIDs.append(stationID)
         mod_tmp = pd.DataFrame(data = np.c_[sta_date,sta_hsig[:,ista]],
-                               columns = ['date_time', 'wnd' ]).set_index('date_time')
+                               columns = ['date_time', 'hsig' ]).set_index('date_time')
         mod_tmp._metadata = stationID
         mod.append(mod_tmp)
 
     stationIDs = np.array(stationIDs)
     mod_table = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
-   
     return mod,mod_table
-
 
 #############################################################
 def make_map(bbox, **kw):
@@ -549,6 +547,59 @@ def make_map(bbox, **kw):
     folium.LayerControl().add_to(m)
     return m
 
+
+import cartopy.crs as ccrs
+from cartopy.mpl.gridliner import (LONGITUDE_FORMATTER,
+                                   LATITUDE_FORMATTER)
+import cartopy.feature as cfeature 
+
+def make_map(projection=ccrs.PlateCarree()):                                                                                                                                        
+                                                                                           
+    """                                                                          
+    Generate fig and ax using cartopy                                                                    
+    input: projection                                                                                    
+    output: fig and ax                             
+    """                                  
+    alpha = 0.5                                        
+    subplot_kw = dict(projection=projection)                        
+    fig, ax = plt.subplots(figsize=(9, 13),                           
+                           subplot_kw=subplot_kw)   
+    gl = ax.gridlines(draw_labels=True)                                 
+    gl.xlabels_top = gl.ylabels_right = False 
+    gl.xformatter = LONGITUDE_FORMATTER                        
+    gl.yformatter = LATITUDE_FORMATTER                                
+                                    
+        # Put a background image on for nice sea rendering.             
+    ax.stock_img()                                   
+                                                          
+    # Create a feature for States/Admin 1 regions at 1:50m from Natural Earth
+    states_provinces = cfeature.NaturalEarthFeature(                      
+        category='cultural',                  
+        name='admin_1_states_provinces_lines',
+        scale='50m',           
+        facecolor='none')        
+
+    SOURCE = 'Natural Earth'
+    LICENSE = 'public domain'
+                                                                                                                                                                                    
+    ax.add_feature(cfeature.LAND,zorder=0,alpha=alpha)          
+    ax.add_feature(cfeature.COASTLINE,zorder=1,alpha=alpha)
+    ax.add_feature(cfeature.BORDERS,zorder=1,alpha=2*alpha)
+                       
+    ax.add_feature(states_provinces, edgecolor='gray',zorder=1)
+                                                          
+    # Add a text annotation for the license information to the
+    # the bottom right corner.                                            
+    text = AnchoredText(r'$\mathcircled{{c}}$ {}; license: {}'
+                        ''.format(SOURCE, LICENSE),
+                        loc=4, prop={'size': 9}, frameon=True)                                    
+    ax.add_artist(text)                                                                           
+                                         
+    ax.set_xlim(-132,-65)  #lon limits           
+    ax.set_ylim( 20 , 55)  #lat limits   
+    return fig, ax
+
+
 ########################################
 ####       MAIN CODE from HERE     #####
 ########################################
@@ -586,11 +637,11 @@ remove_mean_diff = True
 
 
 #
-fhwm = 'obs/obs_hwm/hwm_' + prefix.lower() + '.csv'
+fhwm = 'obs/hwm/hwm_' + prefix.lower() + '.csv'
 fgrd = 'model/depth_hsofs_inp.nc'
 #
-dirs = glob(model_dir+'/*')
-for dir0 in dirs:
+dirs = np.array(glob(model_dir+'/*'))
+for dir0 in dirs[0:2]:
     fort61       = dir0 + '/fort_wind.61.nc'
     wav_at_nbdc  = dir0 + '/01_wave_on_ndbc_obs.nc'
     win_at_nbdc  = dir0 + '/01_wind_on_ndbc_obs.nc'
@@ -672,8 +723,8 @@ wnd_obs_table   = all_data['wnd_obs_table']
 wav_ocn         = all_data['wav_ocn']
 wav_ocn_table   = all_data['wav_ocn_table']
 #
-wnd_obs         = all_data['wnd_obs']
-wnd_obs_table   = all_data['wnd_obs_table']
+wnd_ocn         = all_data['wnd_ocn']
+wnd_ocn_table   = all_data['wnd_ocn_table']
 
 ############################################################
 ########### Read SSH data
@@ -766,20 +817,18 @@ except:
     wind_stations = False
 
 
-############# Wave obs and model analysis ########################
+############# Wave NDBC obs and model analysis ########################
 try:
-    
-    #read wind model data
+    #read wave model data
     wav_mod,wav_mod_table = get_station_wave(wav_at_nbdc,wav_ocn_table)
 
     # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
-    commonwav  = set(wav_obs_table['station_code']).intersection(wav_mod_table  ['station_code'].values)
+    commonwav  = set(wav_ocn_table['station_code'].values).intersection(wav_mod_table  ['station_code'].values)
 
     wav_obs, wav_mod = [], []
     for station in commonwav:
         wav_obs.extend([obs for obs in wav_obs   if obs._metadata['station_code'] == station])
         wav_mod.extend([obm for obm in wav_mod   if obm._metadata                 == station])
-
 
     index = pd.date_range(
         start = start_dt.replace(tzinfo=None),
@@ -812,13 +861,6 @@ try:
 except:
     print (' >  fort.61 does not include wind info ..')
     wave_stations = False
-
-
-
-
-
-
-
 
 
 #######################################################
@@ -958,9 +1000,9 @@ if plot_cones:
     def style_function(feature):
         return {
             'fillOpacity': 0,
-            'color': 'black',
+            'color': 'green',
             'stroke': 1,
-            'weight': 0.5,
+            'weight': 0.3,
             'opacity': 0.3,
         }
 
@@ -1104,7 +1146,21 @@ m.save(fname)
 
 
 
+#plot stations
+print ('Static Cartopy map ...')
+fig,ax = make_map()                                             
+ax.set_title('Arizona Outdoor Stations')
+ax.legend(ncol=4)
 
+ax.scatter(x=wav_ocn_table.lon  ,y=wav_ocn_table.lat  ,s=10,c='blue'  ,lw=0,label = 'wave NDBC',alpha=0.7)
+
+
+ax.legend()  
+ax.set_xlim(lim['xmin'],lim['xmax'])
+ax.set_ylim(lim['ymin'],lim['ymax'])
+
+plt.savefig('purpule_outside.png',dpi=450)
+plt.show()
 
 
 

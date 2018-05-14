@@ -69,7 +69,10 @@ def write_csv(base_dir, name, year, table, data, label):
         data[ista].to_csv(fname)
 
         
-    
+
+obs_station_list_gen()
+
+
 
 #def main():
 #Sandy

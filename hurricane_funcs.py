@@ -601,7 +601,7 @@ def obs_station_list_gen(bbox = [-99.0, 5.0, -52.8, 46.3]):
     bbox for HSOF mesh
     """
     
-    out_dir = 'inp/obs_locs/'
+    out_dir = 'obs/obs_locs/'
     os.system('mkdir -p ' + out_dir )
     
     coops_wlev_stations = get_coops_stations_info(type = 'wlev')
