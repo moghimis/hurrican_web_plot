@@ -215,7 +215,8 @@ def download_nhc_best_track(year,code):
 
     path = os.path.join(base, fname)
     #download(url, path,fname) 
-    wget.download(url+fname,out=base)
+    if not os.path.exists(url+fname):
+        wget.download(url+fname,out=base)
 
     return base
 
@@ -236,7 +237,8 @@ def download_nhc_gis_best_track(year,code):
 
     path = os.path.join(base, fname)
     #download(url, path,fname) 
-    wget.download(url+fname,out=base)
+    if not os.path.exists(url+fname):
+        wget.download(url+fname,out=base)
     return base
 
 #################

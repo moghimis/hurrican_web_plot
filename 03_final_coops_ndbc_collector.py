@@ -38,6 +38,8 @@ import geopandas as gpd
 
 try:
     os.system('rm __pycache__/hurricane_funcs*'  )
+    os.system('rm hurricane_funcs.pyc'  )
+
 except:
     pass
 if 'hurricane_funcs' in sys.modules:  
@@ -47,118 +49,148 @@ from hurricane_funcs import *
 import arrow
 
 
+def write_csv(base_dir, name, year, table, data, label):
+    #label   = 'coops_ssh'
+    #out_dir =  os.path.join(base_dir,name+year) 
+    #table   = ssh_table
+    #data    = ssh
 
-def main():
-    #Sandy
-    name = 'SANDY'
-    year = '2012'
-    obs_xtra_days = datetime.timedelta(5)
-    
-    base_dir = 'obs/'
-    ########
-    ########
+    outt    = os.path.join(out_dir,label)
+    outd    = os.path.join(outt,'data')  
+    if not os.path.exists(outd):
+        os.makedirs(outd)
 
-    code,hurricane_gis_files = get_nhc_storm_info (year,name)
-    base                     = download_nhc_gis_best_track(year,code)
-    line,points,radii = read_gis_best_track(base,code)
-    #
-    bounds = np.array(points.buffer(2).bounds)
-    lons = np.r_[bounds[:,0],bounds[:,2]]
-    lats = np.r_[bounds[:,1],bounds[:,3]]
-    #
-    bbox = lons.min(), lats.min(), lons.max(), lats.max()
-    #
-    start_txt = str (np.array( points.DTG)[ 0])
-    end_txt   = str (np.array( points.DTG)[-1])
-    #
-    start_dt = arrow.get(start_txt, 'YYYYMMDDhh').datetime - obs_xtra_days
-    end_dt   = arrow.get(end_txt  , 'YYYYMMDDhh').datetime + obs_xtra_days
-    #
-    # Note that the bounding box is derived from the track and the latest prediction cone.
-    strbbox = ', '.join(format(v, '.2f') for v in bbox)
-    print('bbox: {}\nstart: {}\n  end: {}'.format(strbbox, start_dt, end_dt))
+    table.to_csv(os.path.join(outt,'table.csv'))
+    stations = table['station_code']
+
+    for ista in range(len(stations)):
+        sta   = stations [ista]
+        fname = os.path.join(outd,sta)+'.csv'
+        data[ista].to_csv(fname)
+
+        
     
-    ######
-    print('  > Get water level information  CO-OPS')
-    ssh, ssh_table = get_coops(
-        start=start_dt,
-        end=end_dt,
-        sos_name='water_surface_height_above_reference_datum',
-        units=cf_units.Unit('meters'),
-        datum = 'MSL',
-        bbox=bbox,
+
+#def main():
+#Sandy
+name = 'SANDY'
+year = '2012'
+obs_xtra_days = datetime.timedelta(5)
+
+base_dir = 'obs/'
+########
+########
+
+code,hurricane_gis_files = get_nhc_storm_info (year,name)
+base                     = download_nhc_gis_best_track(year,code)
+line,points,radii = read_gis_best_track(base,code)
+#
+bounds = np.array(points.buffer(2).bounds)
+lons = np.r_[bounds[:,0],bounds[:,2]]
+lats = np.r_[bounds[:,1],bounds[:,3]]
+#
+bbox = lons.min(), lats.min(), lons.max(), lats.max()
+#
+start_txt = str (np.array( points.DTG)[ 0])
+end_txt   = str (np.array( points.DTG)[-1])
+#
+start_dt = arrow.get(start_txt, 'YYYYMMDDhh').datetime - obs_xtra_days
+end_dt   = arrow.get(end_txt  , 'YYYYMMDDhh').datetime + obs_xtra_days
+#
+# Note that the bounding box is derived from the track and the latest prediction cone.
+strbbox = ', '.join(format(v, '.2f') for v in bbox)
+print('bbox: {}\nstart: {}\n  end: {}'.format(strbbox, start_dt, end_dt))
+
+######
+print('  > Get water level information  CO-OPS')
+ssh, ssh_table = get_coops(
+    start=start_dt,
+    end=end_dt,
+    sos_name='water_surface_height_above_reference_datum',
+    units=cf_units.Unit('meters'),
+    datum = 'MSL',
+    bbox=bbox,
+)
+
+######
+print('  > Get wind information CO-OPS')
+wnd_obs, wnd_obs_table = get_coops(
+    start=start_dt,
+    end=end_dt,
+    sos_name='wind_speed',
+    units=cf_units.Unit('m/s'),
+    bbox=bbox,
     )
-    
-    ######
-    print('  > Get wind information CO-OPS')
-    wnd_obs, wnd_obs_table = get_coops(
-        start=start_dt,
-        end=end_dt,
-        sos_name='wind_speed',
-        units=cf_units.Unit('m/s'),
-        bbox=bbox,
-        )
 
-    #####
-    print('  > Get wind ocean information (ndbc)')
-    wnd_ocn, wnd_ocn_table = get_ndbc(
-        start=start_dt,
-        end=end_dt,
-        sos_name='winds',
-        bbox=bbox,
-        )
-    
-    #####
-    print('  > Get wave ocean information (ndbc)')
-    wav_ocn, wav_ocn_table = get_ndbc(
-        start=start_dt,
-        end=end_dt,
-        sos_name='waves',
-        bbox=bbox,
-        )
+#####
+print('  > Get wind ocean information (ndbc)')
+wnd_ocn, wnd_ocn_table = get_ndbc(
+    start=start_dt,
+    end=end_dt,
+    sos_name='winds',
+    bbox=bbox,
+    )
 
-    #####
-    all_data = dict(wnd_ocn =wnd_ocn   , wnd_ocn_table = wnd_ocn_table,
-                    wav_ocn = wav_ocn  , wav_ocn_table = wav_ocn_table,
-                    ssh     =  ssh     , ssh_table     = ssh_table,
-                    wnd_obs =  wnd_obs , wnd_obs_table = wnd_obs_table)
+#####
+print('  > Get wave ocean information (ndbc)')
+wav_ocn, wav_ocn_table = get_ndbc(
+    start=start_dt,
+    end=end_dt,
+    sos_name='waves',
+    bbox=bbox,
+    )
 
-    #####
-    bbox_txt = str(bbox).replace(' ','_').replace(',','_').replace('[','_').replace(']','_')
-    scr_dir    = base_dir + '/' + name+year+'/'
-    os.system('mkdir -p ' + scr_dir)
 
-   
-    pickname = scr_dir + name + year + bbox_txt.replace('(','_').replace(')','_') + '.pik2'
-    f = open(pickname, 'wb')
-    pickle.dump(all_data,f,protocol=2)
-    f.close()
-    
-   
-    pickname = scr_dir + name + year + bbox_txt.replace('(','_').replace(')','_') + '.pik3'
-    f = open(pickname, 'wb')
-    pickle.dump(all_data,f)
-    f.close()
+print('  > write csv files')
+write_csv(base_dir, name, year, table=wnd_ocn_table, data= wnd_ocn , label='ndbc_wind' )
+write_csv(base_dir, name, year, table=wav_ocn_table, data= wav_ocn , label='ndbc_wave' )
+write_csv(base_dir, name, year, table=ssh_table    , data= ssh     , label='coops_ssh' )
+write_csv(base_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
 
+
+print('  > write pickle files')
+#####
+all_data = dict(wnd_ocn =wnd_ocn   , wnd_ocn_table = wnd_ocn_table,
+                wav_ocn = wav_ocn  , wav_ocn_table = wav_ocn_table,
+                ssh     =  ssh     , ssh_table     = ssh_table,
+                wnd_obs =  wnd_obs , wnd_obs_table = wnd_obs_table)
+
+#####
+bbox_txt = str(bbox).replace(' ','_').replace(',','_').replace('[','_').replace(']','_')
+scr_dir    = base_dir + '/' + name+year+'/'
+os.system('mkdir -p ' + scr_dir)
+
+
+pickname = scr_dir + name + year + bbox_txt.replace('(','_').replace(')','_') + '.pik2'
+f = open(pickname, 'wb')
+pickle.dump(all_data,f,protocol=2)
+f.close()
+
+
+pickname = scr_dir + name + year + bbox_txt.replace('(','_').replace(')','_') + '.pik3'
+f = open(pickname, 'wb')
+pickle.dump(all_data,f)
+f.close()
 
 
 
-    
-    #
-    # back up script file
-    args=sys.argv
-    scr_name = args[0]
-    os.system('cp -fr ' + scr_name + '    ' + scr_dir)
-    #
-    #with open(pick, "rb") as f:
-    #    w = pickle.load(f)
-
-    #f = open(pick, "rb")
-    #w = pickle.load(f)
 
 
-if __name__ == "__main__":
-    main()
+#
+# back up script file
+args=sys.argv
+scr_name = args[0]
+os.system('cp -fr ' + scr_name + '    ' + scr_dir)
+#
+#with open(pick, "rb") as f:
+#    w = pickle.load(f)
+
+#f = open(pick, "rb")
+#w = pickle.load(f)
+
+
+#if __name__ == "__main__":
+#    main()
 
 
 
