@@ -1158,6 +1158,7 @@ for point in points:
         popup=popup,
     ).add_to(m)
 
+#m = make_map(bbox)
 ####################################################
 print('     > Plot High Water Marks ..')
 df = pd.read_csv(fhwm)
@@ -1173,10 +1174,13 @@ for im in range (len(hwm)):
     location = lat_hwm[im], lon_hwm[im]
     ind = np.argmin (np.abs(levels-hwm[im]))
 
-    popup = 'HWM_ID:{}<br>{}'.format(df['HWM_ID'][im],df['Description'][im])
-    #popup = popup.replace('"',' ').replace('/', ' ').replace(' ','-') 
-    popup = popup[:50]
-    #print (popup)
+    #popup = 'HWM_ID:{}<br>{}'.format(df['HWM_ID'][im],df['Description'][im])
+    #popup = popup[:50]
+
+    words = ' '.join(df['Description'][im].split()[:3])
+    popup = 'HWM_ID: {}<br>{}<br>Elev: {} [m, MSL]'.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
+    #popup = popup[:50]
+
     
     folium.CircleMarker(
         location=location,
@@ -1196,9 +1200,9 @@ print ('     > Add disclaimer and storm name ..')
 Disclaimer_html =   '''
                 <div style="position: fixed; 
                             bottom: 15px; left: 20px; width: 520px; height: 40px; 
-                            border:2px solid grey; z-index:9999; font-size:12px; background-color: lightgray;
+                            border:2px solid grey; z-index:9999; font-size:12px; background-color: lightgray;opacity: 0.5;
                             ">&nbsp; For Official Use Only. Pre-Decisional information not releasable outside US Government. <br>
-                              &nbsp; Contact: CSDL/OCS/NOS/NOAA &nbsp; <br>
+                              &nbsp; Contact: Saeed.Moghimi@noaa.gov CSDL/OCS/NOS/NOAA &nbsp; <br>
                 </div>
                 ''' 
 
@@ -1209,7 +1213,7 @@ m.get_root().html.add_child(folium.Element(Disclaimer_html))
 storm_info_html ='''
                 <div style="position: fixed; 
                             bottom: 75px; left: 20px; width: 150px; height: 50px; 
-                            border:2px solid black; z-index:9999; font-size:18px;background-color: lightgray;
+                            border:2px solid black; z-index:9999; font-size:18px;background-color: lightgray;opacity: 0.5;
                             ">&nbsp; Storm: {} <br>
                               &nbsp; Year:  {}  &nbsp; <br>
                 </div>
@@ -1221,7 +1225,7 @@ m.get_root().html.add_child(folium.Element(storm_info_html))
 
 
 print ('     > Save file ...')
-fname = 'zz{}_storm.html'.format(name.split()[-1].lower())
+fname = '{}_storm.html'.format(name.split()[-1].lower())
 m.save(fname)
 
 
