@@ -35,7 +35,7 @@ from ioos_tools.ioos import collector2table
 import pickle 
 
 import geopandas as gpd
-
+#####################################################
 try:
     os.system('rm __pycache__/hurricane_funcs*'  )
     os.system('rm hurricane_funcs.pyc'  )
@@ -45,44 +45,24 @@ except:
 if 'hurricane_funcs' in sys.modules:  
     del(sys.modules["hurricane_funcs"])
 from hurricane_funcs import *
+####################################################
+try:
+    os.system('rm __pycache__/base_info*.pyc'  )
+    os.system('rm base_info*.pyc'  )
+except:
+    pass
+if 'base_info' in sys.modules:  
+    del(sys.modules["base_info"])
+from base_info import *
+####################################################
 
 import arrow
-
-
-def write_csv(base_dir, name, year, table, data, label):
-    #label   = 'coops_ssh'
-    #out_dir =  os.path.join(base_dir,name+year) 
-    #table   = ssh_table
-    #data    = ssh
-
-    outt    = os.path.join(out_dir,label)
-    outd    = os.path.join(outt,'data')  
-    if not os.path.exists(outd):
-        os.makedirs(outd)
-
-    table.to_csv(os.path.join(outt,'table.csv'))
-    stations = table['station_code']
-
-    for ista in range(len(stations)):
-        sta   = stations [ista]
-        fname = os.path.join(outd,sta)+'.csv'
-        data[ista].to_csv(fname)
-
         
+if False:
+    # not needed. will take from the storm specific obs list from coops and ndbc
+    obs_station_list_gen()
 
-obs_station_list_gen()
 
-
-
-#def main():
-#Sandy
-name = 'SANDY'
-year = '2012'
-obs_xtra_days = datetime.timedelta(5)
-
-base_dir = 'obs/'
-########
-########
 
 code,hurricane_gis_files = get_nhc_storm_info (year,name)
 base                     = download_nhc_gis_best_track(year,code)
@@ -104,6 +84,7 @@ end_dt   = arrow.get(end_txt  , 'YYYYMMDDhh').datetime + obs_xtra_days
 strbbox = ', '.join(format(v, '.2f') for v in bbox)
 print('bbox: {}\nstart: {}\n  end: {}'.format(strbbox, start_dt, end_dt))
 
+
 ######
 print('  > Get water level information  CO-OPS')
 ssh, ssh_table = get_coops(
@@ -114,6 +95,7 @@ ssh, ssh_table = get_coops(
     datum = 'MSL',
     bbox=bbox,
 )
+
 
 ######
 print('  > Get wind information CO-OPS')
@@ -144,39 +126,22 @@ wav_ocn, wav_ocn_table = get_ndbc(
     )
 
 
+# out dir
+obs_dir = os.path.join(base_dir,'obs')
+
 print('  > write csv files')
-write_csv(base_dir, name, year, table=wnd_ocn_table, data= wnd_ocn , label='ndbc_wind' )
-write_csv(base_dir, name, year, table=wav_ocn_table, data= wav_ocn , label='ndbc_wave' )
-write_csv(base_dir, name, year, table=ssh_table    , data= ssh     , label='coops_ssh' )
-write_csv(base_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
+write_csv(obs_dir, name, year, table=ssh_table    , data= ssh     , label='coops_ssh' )
+write_csv(obs_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
+write_csv(obs_dir, name, year, table=wnd_ocn_table, data= wnd_ocn , label='ndbc_wind' )
+write_csv(obs_dir, name, year, table=wav_ocn_table, data= wav_ocn , label='ndbc_wave' )
 
 
-print('  > write pickle files')
-#####
-all_data = dict(wnd_ocn =wnd_ocn   , wnd_ocn_table = wnd_ocn_table,
-                wav_ocn = wav_ocn  , wav_ocn_table = wav_ocn_table,
-                ssh     =  ssh     , ssh_table     = ssh_table,
-                wnd_obs =  wnd_obs , wnd_obs_table = wnd_obs_table)
-
-#####
-bbox_txt = str(bbox).replace(' ','_').replace(',','_').replace('[','_').replace(']','_')
-scr_dir    = base_dir + '/' + name+year+'/'
-os.system('mkdir -p ' + scr_dir)
-
-
-pickname = scr_dir + name + year + bbox_txt.replace('(','_').replace(')','_') + '.pik2'
-f = open(pickname, 'wb')
-pickle.dump(all_data,f,protocol=2)
-f.close()
-
-
-pickname = scr_dir + name + year + bbox_txt.replace('(','_').replace(')','_') + '.pik3'
-f = open(pickname, 'wb')
-pickle.dump(all_data,f)
-f.close()
-
-
-
+if False:
+    # test reading files
+    ssh_table1    , ssh1      = read_csv (obs_dir, name, year, label='coops_ssh' )
+    wnd_obs_table1, wnd_obs1  = read_csv (obs_dir, name, year, label='coops_wind')
+    wnd_ocn_table1, wnd_ocn1  = read_csv (obs_dir, name, year, label='ndbc_wind' )
+    wav_ocn_table1, wav_ocn1 = read_csv (obs_dir, name, year, label='ndbc_wave' )
 
 
 #
