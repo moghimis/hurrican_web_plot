@@ -26,20 +26,18 @@ import cPickle as pickle
 import pandas as pd
 
 try:
-    os.system('rm base_info.pyc')
+    os.system('rm base_info_adc_plot.pyc')
 except:
     pass
-if 'base_info' in sys.modules:  
-    del(sys.modules["base_info"])
-import base_info
-
+if 'base_info_adc_plot' in sys.modules:  
+    del(sys.modules["base_info_adc_plot"])
+import base_info_adc_plot as base_info
 
 def find_nearest1d(xvec,yvec,xp,yp):
     """
     In: xvec, yvec of the grid and xp,yp of the point of interst
     Retun: i,j,proximity of the nearset grid point
     """
-
     dist = np.sqrt((xvec-xp)**2+(yvec-yp)**2)
     i = np.where(dist==dist.min())
     return i[0],dist.min()
@@ -60,10 +58,13 @@ key  = '02-atm:y-tid:y-wav:y-try01'
 
 
 #########################################################
+name  = 'SANDY'
+year  = '2012'
+
 print (' > Read Obs stas ...')
 sta_info_dir = '/scratch4/COASTAL/coastal/save/Saeed.Moghimi/models/NEMS/NEMS_inps/01_data/coops_ndbc_data/' 
-ndbc_wave_sta_file = sta_info_dir + 'ndbc_wave_stations_hsofs.csv'
-ndbc_wind_sta_file = sta_info_dir + 'ndbc_wind_stations_hsofs.csv'
+ndbc_wave_sta_file = os.path.join(sta_info_dir,name+year,'ndbc_wave','table.csv')
+ndbc_wind_sta_file = os.path.join(sta_info_dir,name+year,'ndbc_wind','table.csv')
 
 wave_sta = pd.read_csv(ndbc_wave_sta_file)
 wind_sta = pd.read_csv(ndbc_wind_sta_file)
@@ -103,9 +104,9 @@ for key in base_info.cases.keys():
         vwnds = np.zeros_like(uwnds)
         press = np.zeros_like(uwnds)  
         #
-        lons = wind_sta.Longitude
-        lats = wind_sta.Latitude
-        
+        lons    = wind_sta.lon
+        lats    = wind_sta.lat
+        sat_lab = wind_sta['station_code'][:]
         for ip in range(len(lons)):
             [i],prox = find_nearest1d(xvec = lonw,yvec = latw, xp = lons[ip],yp = lats[ip])
             uwnds[:,ip] = uwnd[:,i]   
@@ -113,6 +114,8 @@ for key in base_info.cases.keys():
             press[:,ip] = pres[:,i]  
         
         wind_out_fname = base_info.cases[key]['dir'] + '/01_wind_on_ndbc_obs.nc'
+        print (wind_out_fname)
+        
         nc = n4.Dataset(wind_out_fname,'w')
          
         nc.Description = 'Wind model for obs locations'
@@ -121,14 +124,27 @@ for key in base_info.cases.keys():
          
         # DIMENSIONS #
        
-        nc.createDimension('time', nt_wind)
+        nc.createDimension('time', None)
         nc.createDimension('station'   , nloc_wind)
+        nc.createDimension('namelen'   ,  50 )
+
+        name1       = nc.createVariable(varname = 'station_name', datatype='S1', dimensions=('station','namelen',))
+        for ista in range(len(sat_lab)):
+            label =  sat_lab[ista]
+            #print (label)
+            for ich in range(len(label)):
+                name1[ista,ich]    = label[ich]
         
         time1       = nc.createVariable(varname = 'time', datatype='f8', dimensions=('time',))
         time1.units = ncvw['time'].units
         time1[:]    = ncvw['time'][:]  
-        
          
+        lon1       = nc.createVariable(varname = 'lon', datatype='f8', dimensions=('station',))
+        lon1[:]    =   lons.values [:]
+
+        lat1       = nc.createVariable(varname = 'lat', datatype='f8', dimensions=('station',))
+        lat1[:]    = lats.values [:]
+                 
         uwind1 =  nc.createVariable(varname = 'uwnd', datatype='f8', dimensions=('time','station',))
         vwind1 =  nc.createVariable(varname = 'vwnd', datatype='f8', dimensions=('time','station',))
         press1 =  nc.createVariable(varname = 'pres', datatype='f8', dimensions=('time','station',))
@@ -139,6 +155,7 @@ for key in base_info.cases.keys():
         
         nc.close()
         ncw.close()
+        #sys.exit()
     
     wave_inp = glob.glob(base_info.cases[key]['dir'] +'/inp_wavdata/*')
     if len(wave_inp) > 0:
@@ -161,8 +178,9 @@ for key in base_info.cases.keys():
         ncd.close()
         #
         
-        lons = wave_sta.Longitude
-        lats = wave_sta.Latitude
+        lons = wave_sta.lon
+        lats = wave_sta.lat
+        sat_lab = wave_sta['station_code'][:]
         hsigs = np.zeros ((len(wave_dates),nloc_wave))
         wdirs = np.zeros_like(hsigs)
         
@@ -179,9 +197,23 @@ for key in base_info.cases.keys():
         nc.Created = datetime.datetime.now().isoformat()
          
         # DIMENSIONS #
-        nc.createDimension('time', len(wave_dates))
+        nc.createDimension('time', None)
         nc.createDimension('station'   , nloc_wave)
+        nc.createDimension('namelen'   ,  50 )
+
+        name1       = nc.createVariable(varname = 'station_name', datatype='S1', dimensions=('station','namelen',))
+        for ista in range(len(sat_lab)):
+            label =  sat_lab[ista]
+            #print (label)
+            for ich in range(len(label)):
+                name1[ista,ich]    = label[ich]
+
         
+        lon1       = nc.createVariable(varname = 'lon', datatype='f8', dimensions=('station',))
+        lon1[:]    =   lons.values [:]
+
+        lat1       = nc.createVariable(varname = 'lat', datatype='f8', dimensions=('station',))
+        lat1[:]    = lats.values [:]
 
         time1       = nc.createVariable(varname = 'time', datatype='f8', dimensions=('time',))
         time1.units = ncvh['time'].units
@@ -196,14 +228,59 @@ for key in base_info.cases.keys():
         nc.close()
         nch.close()
 
+    
+    print ('>>> Prepare max surge ..')
+    
+    fname  =  base_info.cases[base_info.key0]['dir'] + '/maxele.63.nc'
+    nc0    = n4.Dataset(fname)
+    ncv0   = nc0.variables
+    zeta0  = ncv0['zeta_max'][:]
+    nc0.close()
+    fname_orig  =  base_info.cases[key]['dir'] + '/maxele.63.nc'
+    fname       =  base_info.cases[key]['dir'] + '/maxele.63_all.nc'
+    os.system('cp -rf ' + fname_orig + '  ' + fname )
+    
+    nc1     = n4.Dataset(fname,'r+')
+    ncv1    = nc1.variables
+    zeta1  = ncv1['zeta_max'][:]
+    mask = zeta1 < 0
+    val = zeta1 - zeta0
+    val[np.isnan(val)] = 0.0
+    
+    node  = nc1.dimensions['node']
+    surge1 = nc1.createVariable(varname = 'surge', datatype='f8', dimensions=('node',))
+    surge1[:] = val
+    surge1.long_name = 'Max surge from max elev minus max tide in meter. Water Above Ground Level.'
+    surge1.short_name = 'Surge [m]'
+    nc1.close()
+
+print ('Organize and copy files ...')
+out_dir = '/scratch4/COASTAL/coastal/noscrub/Saeed.Moghimi/stmp10_sandy/z01_4web_plot/' + base_info.storm_name+'/'
+
+
+for key in np.sort(base_info.cases.keys()):
+    subdir = key +'.'+ base_info.cases[key]['label'] +'.'+ base_info.cases[key]['dir'].split('/')[-2] + '/'
+    print (subdir)
+    out_dir_case = out_dir + subdir
+    os.system('mkdir -p ' +  out_dir_case)
+    
+    
+    fnames = [
+        base_info.cases[key]['dir']+ '/maxele.63_all.nc',
+        base_info.cases[key]['dir']+ '/01_wave_on_ndbc_obs.nc',
+        base_info.cases[key]['dir']+ '/01_wind_on_ndbc_obs.nc',
+        base_info.cases[key]['dir']+ '/fort_wind.61.nc',
+        ]
+    
+    for fname in fnames:
+        os.system('cp -fv ' + fname + ' ' +  out_dir_case  )
+
+# back up script file
+args=sys.argv
+scr_name = args[0]
+os.system('cp -fr  '+scr_name +'     '+out_dir_case)
+
 print ('Finish ...')
-
-
-
-#
-
-
-
 
 
 

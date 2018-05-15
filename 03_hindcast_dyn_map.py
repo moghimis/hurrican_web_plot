@@ -843,11 +843,13 @@ except:
 
 ############# Wave NDBC obs and model analysis ########################
 try:
+
     #read wave model data
+<
     wav_mod,wav_mod_table = get_model_at_station_wave(wav_at_nbdc)
     
     commonwav  = set(wav_ocn_table['station_code']).intersection(wav_mod_table['station_code'].values)
-
+>
     wav_ocns, wav_mods = [], []
     for station in commonwav:
         wav_ocns.extend([obs for obs in wav_ocn   if obs._metadata['station_code'] == station])
