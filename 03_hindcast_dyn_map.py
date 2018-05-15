@@ -1200,7 +1200,7 @@ print ('     > Add disclaimer and storm name ..')
 Disclaimer_html =   '''
                 <div style="position: fixed; 
                             bottom: 15px; left: 20px; width: 520px; height: 40px; 
-                            border:2px solid grey; z-index:9999; font-size:12px; background-color: lightgray;opacity: 0.5;
+                            border:2px solid grey; z-index:9999; font-size:12px; background-color: lightgray;opacity: 0.3;
                             ">&nbsp; For Official Use Only. Pre-Decisional information not releasable outside US Government. <br>
                               &nbsp; Contact: Saeed.Moghimi@noaa.gov CSDL/OCS/NOS/NOAA &nbsp; <br>
                 </div>
@@ -1213,7 +1213,7 @@ m.get_root().html.add_child(folium.Element(Disclaimer_html))
 storm_info_html ='''
                 <div style="position: fixed; 
                             bottom: 75px; left: 20px; width: 150px; height: 50px; 
-                            border:2px solid black; z-index:9999; font-size:18px;background-color: lightgray;opacity: 0.5;
+                            border:2px solid grey; z-index:9999; font-size:18px;background-color: lightgray;opacity: 0.3;
                             ">&nbsp; Storm: {} <br>
                               &nbsp; Year:  {}  &nbsp; <br>
                 </div>
