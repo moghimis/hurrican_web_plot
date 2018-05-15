@@ -675,7 +675,7 @@ for dir0 in dirs[0:2]:
     fort61       = dir0 + '/fort_wind.61.nc'
     wav_at_nbdc  = dir0 + '/01_wave_on_ndbc_obs.nc'
     wnd_at_nbdc  = dir0 + '/01_wind_on_ndbc_obs.nc'
-    felev        = dir0 + '/maxele.63.nc'
+    felev        = dir0 + '/maxele.63_all.nc'
     
 
 print ('\n\n\n storm: ', name, 'Year: ', year, '\n\n\n') 
