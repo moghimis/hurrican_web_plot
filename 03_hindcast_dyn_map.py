@@ -219,7 +219,7 @@ def make_plot(obs, model,label,remove_mean_diff=False):
     p.yaxis.axis_label = label
 
     mod_val = model.values.squeeze()
-    obs_val = obs.values
+    obs_val = obs.values.squeeze()
 
     if ('SSH' in label) and remove_mean_diff:
         mod_val = mod_val + obs_val.mean() - mod_val.mean()
@@ -411,8 +411,16 @@ def get_station_wnd_all(fort61):
     """
     nc0      = netCDF4.Dataset(fort61)
     ncv0     = nc0.variables 
-    sta_lon  = ncv0['x'][:]
-    sta_lat  = ncv0['y'][:]
+    try:
+        sta_lon  = ncv0['x'][:]
+    except:
+        sta_lon  = ncv0['lon'][:]
+    
+    try:
+        sta_lat  = ncv0['y'][:]
+    except:
+        sta_lon  = ncv0['lat'][:]
+    
     sta_nam  = ncv0['station_name'][:].squeeze()
     sta_uwnd = ncv0['uwnd']        [:].squeeze()
     sta_vwnd = ncv0['vwnd']        [:].squeeze()
@@ -443,8 +451,16 @@ def get_station_wnd(fort61):
     """
     nc0      = netCDF4.Dataset(fort61)
     ncv0     = nc0.variables 
-    sta_lon  = ncv0['x'][:]
-    sta_lat  = ncv0['y'][:]
+    try:
+        sta_lon  = ncv0['x'][:]
+    except:
+        sta_lon  = ncv0['lon'][:]
+    
+    try:
+        sta_lat  = ncv0['y'][:]
+    except:
+        sta_lat  = ncv0['lat'][:]
+    
     sta_nam  = ncv0['station_name'][:].squeeze()
     sta_wnd =  np.sqrt ( ncv0['uwnd'] [:].squeeze() ** 2 +  ncv0['vwnd']        [:].squeeze() ** 2 )
     sta_date = netCDF4.num2date(ncv0['time'][:], ncv0['time'].units)
@@ -495,6 +511,7 @@ def get_station_wave(wav_at_nbdc):
     stationIDs = np.array(stationIDs)
     mod_table = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
     return mod,mod_table
+
 
 #############################################################
 def make_map(bbox, **kw):
@@ -613,15 +630,19 @@ def make_map(projection=ccrs.PlateCarree()):
 ####       MAIN CODE from HERE     #####
 ########################################
 prefix  = name[:3]
-model_dir = base_info.base_dir + '/model/'+ prefix+'/'
-fhwm      = base_info.base_dir + '/obs/hwm/hwm_' + prefix.lower() + '.csv'
-fgrd      = base_info.base_dir + '/model/depth_hsofs_inp.nc'
 
-dirs = np.array(glob(model_dir+'/*'))
+obs_dir = os.path.join(base_dir,'obs')
+mod_dir = os.path.join(base_dir,'mod')
+
+fgrd      = os.path.join(mod_dir,'depth_hsofs_inp.nc')
+
+fhwm      = os.path.join(obs_dir,'hwm/hwm_' + prefix.lower() + '.csv')
+
+dirs = np.array(glob(os.path.join(mod_dir,prefix)+'/*'))
 for dir0 in dirs[0:2]:
     fort61       = dir0 + '/fort_wind.61.nc'
     wav_at_nbdc  = dir0 + '/01_wave_on_ndbc_obs.nc'
-    win_at_nbdc  = dir0 + '/01_wind_on_ndbc_obs.nc'
+    wnd_at_nbdc  = dir0 + '/01_wind_on_ndbc_obs.nc'
     felev        = dir0 + '/maxele.63.nc'
     
 
@@ -670,6 +691,10 @@ else:
     print ('Check for correct time stamp and adapt the code !')
     sys.exit('ERROR') 
 #####################################
+
+start_dt = start_dt  - obs_xtra_days
+end_dt   = end_dt    + obs_xtra_days
+
 # Find the bounding box to search the data.
 
 last_cone = cones[-1]['geometry'].iloc[0]
@@ -686,37 +711,16 @@ print('bbox: {}\nstart: {}\n  end: {}'.format(strbbox, start, end))
 ############################################################
 # read data
 
-read_pickle = False
-if read_pickle:
-    print (' read from pickle')
-    pickname = 'obs//SANDY2012/SANDY2012_-82.69999694824219__10.600000381469727__-68.5__43.5_.pik3'
-    f = open(pickname, "rb")
-    all_data = pickle.load(f)
-
-    ssh             = all_data['ssh']
-    ssh_table       = all_data['ssh_table']
-    #
-    wnd_obs         = all_data['wnd_obs']
-    wnd_obs_table   = all_data['wnd_obs_table']
-    #
-    wav_ocn         = all_data['wav_ocn']
-    wav_ocn_table   = all_data['wav_ocn_table']
-    #
-    wnd_ocn         = all_data['wnd_ocn']
-    wnd_ocn_table   = all_data['wnd_ocn_table']
-else:
-    base_dir = 'obs/'
-    print (' read from CSV files')
-    ssh_table,ssh          = read_csv (base_dir, name, year, label='coops_ssh' )
-    wnd_obs_table,wnd_obs  = read_csv (base_dir, name, year, label='coops_wind')
-    wnd_ocn_table,wnd_ocn  = read_csv (base_dir, name, year, label='ndbc_wind' )
-    wav_ocn_table, wav_ocn, wav_ocn_meta  = read_csv (base_dir, name, year, label='ndbc_wave' )
-
+print (' read from CSV files')
+ssh_table,ssh          = read_csv (obs_dir, name, year, label='coops_ssh' )
+wnd_obs_table,wnd_obs  = read_csv (obs_dir, name, year, label='coops_wind')
+wnd_ocn_table,wnd_ocn  = read_csv (obs_dir, name, year, label='ndbc_wind' )
+wav_ocn_table, wav_ocn = read_csv (obs_dir, name, year, label='ndbc_wave' )
 
 
 ############################################################
 ########### Read SSH data
-mod,mod_table = get_station_ssh(fort61)
+mod , mod_table = get_station_ssh(fort61)
 
 ############# Sea Surface height analysis ########################
 # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
@@ -756,7 +760,7 @@ for series in mod_obs:
     obs.dropna(inplace=True)
     model_observations.append(obs)
 
-############# Wind obs and model analysis ########################
+############# Wind COOPS and model analysis ########################
 try:
     #read wind model data
     wnd_mod,wnd_mod_table = get_station_wnd(fort61)
@@ -799,26 +803,16 @@ try:
         #obs['ssh'][np.abs(obs['ssh']) > 10] = np.nan
         obs.dropna(inplace=True)
         wnd_models.append(obs)
-    wind_stations = True  
+    wind_coops_stations = True  
 except:
     print (' >  fort.61 does not include wind info ..')
-    wind_stations = False
+    wind_coops_stations = False
 
 
 ############# Wave NDBC obs and model analysis ########################
 try:
     #read wave model data
     wav_mod,wav_mod_table = get_station_wave(wav_at_nbdc)
-
-    # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
-    df = wav_ocn_table
-    for col in df.columns:
-        try:
-            df[col]  = df[col].astype('S21') 
-        except:
-            pass
-    #wav_ocn_table ['station_code'] = wav_ocn_table['station_code'].astype('str')
-    #wav_mod_table ['station_code'] = wav_mod_table['station_code'].astype('str') 
     
     commonwav  = set(wav_ocn_table['station_code']).intersection(wav_mod_table['station_code'].values)
 
@@ -836,7 +830,7 @@ try:
     #organize and re-index both observations
     # Re-index and rename series.
     wav_observs = []
-    for series in wav_obs:
+    for series in wav_ocns:
         _metadata = series._metadata
         obs = series.reindex(index=index, limit=1, method='nearest')
         obs._metadata = _metadata
@@ -846,7 +840,7 @@ try:
     ##############################################################
     #model
     wav_models = []
-    for series in wav_mod:
+    for series in wav_mods:
         _metadata = series._metadata
         obs = series.reindex(index=index, limit=1, method='nearest')
         obs._metadata = _metadata
@@ -854,10 +848,56 @@ try:
         #obs['ssh'][np.abs(obs['ssh']) > 10] = np.nan
         obs.dropna(inplace=True)
         wav_models.append(obs)
-    wave_stations = True  
+    wave_ndbc_stations = True  
 except:
     print (' >  fort.61 does not include wind info ..')
-    wave_stations = False
+    wave_ndbc_stations = False
+
+
+
+############# wind NDBC obs and model analysis ########################
+try:
+    #read wind model data
+    wnd_ocn_mod,wnd_ocn_mod_table = get_station_wnd(wnd_at_nbdc_____)
+    
+    commonwav  = set(wnd_ocn_table['station_code']).intersection(wnd_ocn_mod_table['station_code'].values)
+
+    wnd_ocns, wnd_ocn_mods = [], []
+    for station in commonwav:
+        wnd_ocns.extend    ([obs for obs in wnd_ocn   if obs._metadata['station_code'] == station])
+        wnd_ocn_mods.extend([obm for obm in wnd_ocn_mod   if obm._metadata                 == station])
+
+    index = pd.date_range(
+        start = start_dt.replace(tzinfo=None),
+        end   = end_dt.replace  (tzinfo=None),
+        freq='15min'
+    )
+    #############################################################
+    #organize and re-index both observations
+    # Re-index and rename series.
+    wnd_ocn_observs = []
+    for series in wnd_ocns:
+        _metadata = series._metadata
+        obs = series.reindex(index=index, limit=1, method='nearest')
+        obs._metadata = _metadata
+        obs.name = _metadata['station_name']
+        wav_observs.append(obs)
+
+    ##############################################################
+    #model
+    wnd_ocn_models = []
+    for series in wnd_ocn_mods:
+        _metadata = series._metadata
+        obs = series.reindex(index=index, limit=1, method='nearest')
+        obs._metadata = _metadata
+        obs.name = _metadata
+        #obs['ssh'][np.abs(obs['ssh']) > 10] = np.nan
+        obs.dropna(inplace=True)
+        wnd_ocn_models.append(obs)
+    wind_ndbc_stations = True  
+except:
+    print (' >  fort.61 does not include wave info ..')
+    wind_ndbc_stations = False
 
 
 #######################################################
@@ -880,17 +920,7 @@ else:
 
     add = 'MapServer/tile/{z}/{y}/{x}'
     base = 'http://services.arcgisonline.com/arcgis/rest/services'
-    ESRI = dict(Imagery='World_Imagery/MapServer',
-                #Ocean_Base='Ocean/World_Ocean_Base',
-                #Topo_Map='World_Topo_Map/MapServer',
-                #Physical_Map='World_Physical_Map/MapServer',
-                #Terrain_Base='World_Terrain_Base/MapServer',
-                #NatGeo_World_Map='NatGeo_World_Map/MapServer',
-                #Shaded_Relief='World_Shaded_Relief/MapServer',
-                #Ocean_Reference='Ocean/World_Ocean_Reference',
-                #Navigation_Charts='Specialty/World_Navigation_Charts',
-                #Street_Map='World_Street_Map/MapServer'
-                )
+    ESRI = dict(Imagery='World_Imagery/MapServer')
 
     for name1, url in ESRI.items():
         url = '{}/{}/{}'.format(base, url, add)
@@ -941,7 +971,7 @@ color_scale = folium.StepColormap(colors_elev,
 m.add_child(color_scale)
 #
 ####################
-print('     > CO-Ops stations plot')
+print('     > Plot CO-Ops stations plot')
 # ssh Observations stations 
 marker_cluster_coops = MarkerCluster(name='CO-OPs observations')
 marker_cluster_coops.add_to(m)
@@ -954,7 +984,8 @@ for ssh1, model1 in zip(ssh_observations, model_observations):
     marker.add_to(marker_cluster_coops)
 
 ####################
-if wind_stations:
+if wind_coops_stations:
+    print('     > Plot CO-Ops wind stations plot')
     # Wind Observations stations.
     #marker_clusterw = MarkerCluster(name='Wind observations')
     #marker_clusterw.add_to(m)
@@ -967,17 +998,33 @@ if wind_stations:
         marker.add_to(marker_cluster_coops)
 
 ####################
-if wave_stations:
+if wave_ndbc_stations or wind_ndbc_stations:
+    marker_cluster_ndbc = MarkerCluster(name='NDBC observations')
+    marker_cluster_ndbc.add_to(m)
+
+if wave_ndbc_stations:
+    print('     > Plot NDBC wave stations plot')
+
     for ssh1, model1 in zip(wav_observs,wav_models):
         fname = ssh1._metadata['station_code']
         location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
         p = make_plot(ssh1, model1,'Hsig [m]')
         #p = make_plot(ssh1, ssh1)    
-        marker = make_marker(p, location=location, fname=fname, color = 'red')
-        marker.add_to(marker_cluster_coops)
+        marker = make_marker(p, location=location, fname=fname, color = 'purple')
+        marker.add_to(marker_cluster_ndbc)
 
+if wind_ndbc_stations:
+    print('     > Plot NDBC wind stations plot')
+    for ssh1, model1 in zip(wnd_ocn_observs,wnd_ocn_models):
+        fname = ssh1._metadata['station_code']
+        location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
+        p = make_plot(ssh1, model1,'Wind [m/s]')
+        #p = make_plot(ssh1, ssh1)    
+        marker = make_marker(p, location=location, fname=fname, color = 'green')
+        marker.add_to(marker_cluster_ndbc)
 
 ###################        
+## Plotting bounding box
 # folium.LayerControl().add_to(m)
 p = folium.PolyLine(get_coordinates(bbox),
                     color='#009933',
@@ -1132,7 +1179,7 @@ m.get_root().html.add_child(folium.Element(storm_info_html))
 
 
 
-
+print ('     > Save file ...')
 fname = '{}_storm.html'.format(name.split()[-1].lower())
 m.save(fname)
 
@@ -1142,22 +1189,22 @@ m.save(fname)
 
 
 
+if False:
+    #plot stations
+    print ('Static Cartopy map ...')
+    fig,ax = make_map()                                             
+    ax.set_title('Arizona Outdoor Stations')
+    ax.legend(ncol=4)
 
-#plot stations
-print ('Static Cartopy map ...')
-fig,ax = make_map()                                             
-ax.set_title('Arizona Outdoor Stations')
-ax.legend(ncol=4)
-
-ax.scatter(x=wav_ocn_table.lon  ,y=wav_ocn_table.lat  ,s=10,c='blue'  ,lw=0,label = 'wave NDBC',alpha=0.7)
+    ax.scatter(x=wav_ocn_table.lon  ,y=wav_ocn_table.lat  ,s=10,c='blue'  ,lw=0,label = 'wave NDBC',alpha=0.7)
 
 
-ax.legend()  
-ax.set_xlim(lim['xmin'],lim['xmax'])
-ax.set_ylim(lim['ymin'],lim['ymax'])
+    ax.legend()  
+    ax.set_xlim(lim['xmin'],lim['xmax'])
+    ax.set_ylim(lim['ymin'],lim['ymax'])
 
-plt.savefig('purpule_outside.png',dpi=450)
-plt.show()
+    plt.savefig('purpule_outside.png',dpi=450)
+    plt.show()
 
 
 
