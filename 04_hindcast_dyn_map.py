@@ -82,6 +82,15 @@ if 'hurricane_funcs' in sys.modules:
 from hurricane_funcs import *
 
 
+try:
+    os.system('rm __pycache__/base_info*.pyc'  )
+    os.system('rm base_info*.pyc'  )
+except:
+    pass
+if 'base_info' in sys.modules:  
+    del(sys.modules["base_info"])
+from base_info import *
+
 
 ############################
 from   matplotlib.colors import LinearSegmentedColormap
@@ -603,43 +612,11 @@ def make_map(projection=ccrs.PlateCarree()):
 ########################################
 ####       MAIN CODE from HERE     #####
 ########################################
-
-
-#year    = '2017'
-#name    = 'IRMA'
-#inp_dir = '../test_storm_irma/'
-
-
-year    = '2012'
-name    = 'SANDY'
-
-
-
-#year    = '2016'
-#name    = 'MATTHEW'
-#inp_dir = '../test_storm_matthew/'
-
-
-#year    = '2008'
-#name    = 'IKE'
-#inp_dir = '../test_storm_ike/'
-
-
-#year    = '2003'
-#name    = 'ISABEL'
-#inp_dir = '../test_storm_isabel/'
-
 prefix  = name[:3]
-model_dir = 'model/'+ prefix+'/'
-plot_cones = True
-plot_sat   = False
-remove_mean_diff = True
+model_dir = base_info.base_dir + '/model/'+ prefix+'/'
+fhwm      = base_info.base_dir + '/obs/hwm/hwm_' + prefix.lower() + '.csv'
+fgrd      = base_info.base_dir + '/model/depth_hsofs_inp.nc'
 
-
-#
-fhwm = 'obs/hwm/hwm_' + prefix.lower() + '.csv'
-fgrd = 'model/depth_hsofs_inp.nc'
-#
 dirs = np.array(glob(model_dir+'/*'))
 for dir0 in dirs[0:2]:
     fort61       = dir0 + '/fort_wind.61.nc'
