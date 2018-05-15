@@ -59,10 +59,13 @@ key  = '02-atm:y-tid:y-wav:y-try01'
 
 
 #########################################################
+name  = 'SANDY'
+year  = '2012'
+
 print (' > Read Obs stas ...')
 sta_info_dir = '/scratch4/COASTAL/coastal/save/Saeed.Moghimi/models/NEMS/NEMS_inps/01_data/coops_ndbc_data/' 
-ndbc_wave_sta_file = sta_info_dir + 'ndbc_wave_stations_hsofs.csv'
-ndbc_wind_sta_file = sta_info_dir + 'ndbc_wind_stations_hsofs.csv'
+ndbc_wave_sta_file = os.path.join(sta_info_dir,name+year,'ndbc_wave','table.csv')
+ndbc_wind_sta_file = os.path.join(sta_info_dir,name+year,'ndbc_wind','table.csv')
 
 wave_sta = pd.read_csv(ndbc_wave_sta_file)
 wind_sta = pd.read_csv(ndbc_wind_sta_file)
@@ -102,9 +105,9 @@ for key in base_info.cases.keys():
         vwnds = np.zeros_like(uwnds)
         press = np.zeros_like(uwnds)  
         #
-        lons    = wind_sta.Longitude
-        lats    = wind_sta.Latitude
-        sat_lab = wind_sta['Station ID'][:]
+        lons    = wind_sta.lon
+        lats    = wind_sta.lat
+        sat_lab = wind_sta['station_code'][:]
         for ip in range(len(lons)):
             [i],prox = find_nearest1d(xvec = lonw,yvec = latw, xp = lons[ip],yp = lats[ip])
             uwnds[:,ip] = uwnd[:,i]   
@@ -176,9 +179,9 @@ for key in base_info.cases.keys():
         ncd.close()
         #
         
-        lons = wave_sta.Longitude
-        lats = wave_sta.Latitude
-        sat_lab = wave_sta['Station ID'][:]
+        lons = wave_sta.lon
+        lats = wave_sta.lat
+        sat_lab = wave_sta['station_code'][:]
         hsigs = np.zeros ((len(wave_dates),nloc_wave))
         wdirs = np.zeros_like(hsigs)
         
@@ -202,7 +205,7 @@ for key in base_info.cases.keys():
         name1       = nc.createVariable(varname = 'station_name', datatype='S1', dimensions=('station','namelen',))
         for ista in range(len(sat_lab)):
             label =  sat_lab[ista]
-            print (label)
+            #print (label)
             for ich in range(len(label)):
                 name1[ista,ich]    = label[ich]
 
@@ -225,6 +228,45 @@ for key in base_info.cases.keys():
         
         nc.close()
         nch.close()
+
+    
+    print ('Prepare max surge ..')
+    
+        fname  =  base_info.cases[base_info.key0]['dir'] + '/maxele.63.nc'
+        nc0    = netCDF4.Dataset(fname)
+        ncv0   = nc0.variables
+        zeta0  = ncv0['zeta_max'][:]
+        dep0   = ncv0['depth'][:]
+        date = None
+        
+        
+        fname_orig  =  base_info.cases[key]['dir'] + '/maxele.63.nc'
+        fname       =  base_info.cases[key]['dir'] + '/maxele.63_all.nc'
+        os.sys('cp -rf ' + fname_orig + '  ' + fname )
+        
+        nc1     = netCDF4.Dataset(fname)
+        ncv1    = nc1.variables
+        zeta1  = ncv1['zeta_max'][:]
+        
+        mask = zeta1 < 0
+        
+        #tri.set_mask = maskDryElementsTri(tri,mask)
+       
+        val = zeta1 - zeta0
+        #val = np.ma.masked_where(val<0,val)
+        
+        val[np.isnan(val)] = 0.0
+
+
+
+
+
+
+
+
+
+
+
 
 
 print ('Organize and copy files ...')
