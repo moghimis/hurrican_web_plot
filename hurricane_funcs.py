@@ -641,7 +641,7 @@ def write_csv(base_dir, name, year, table, data, label):
     #table   = ssh_table
     #data    = ssh
 
-    outt    = os.path.join(base_dir,label)
+    outt    = os.path.join(base_dir,name+year,label)
     outd    = os.path.join(outt,'data')  
     if not os.path.exists(outd):
         os.makedirs(outd)
@@ -669,7 +669,7 @@ def read_csv(base_dir, name, year, label):
     write_csv(base_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
     
     """
-    outt    = os.path.join(base_dir,label)
+    outt    = os.path.join(base_dir,name+year,label)
     outd    = os.path.join(outt,'data')  
     if not os.path.exists(outd):
        sys.exit('ERROR',outd )
@@ -681,13 +681,19 @@ def read_csv(base_dir, name, year, label):
     metadata = []
     for ista in range(len(stations)):
         sta   = stations [ista]
-        fname = os.path.join(outd,sta)+'.csv'
-        data.append(pd.read_csv(fname))
-    
-        fmeta = os.path.join(outd,sta) + '_metadata.csv'
-        metadata.append(pd.read_csv(fmeta))
-        
-    return table,data,metadata
+        fname = os.path.join(outd,str(sta))+'.csv'
+        obs = pd.read_csv(fname, names=['date_time','value']).set_index('date_time')
+
+        fmeta = os.path.join(outd,str(sta)) + '_metadata.csv'
+        meta  = pd.read_csv(fmeta,names=['names','data']).set_index('names')
+        meta_dict  = meta.to_dict()
+        metadata.append(meta)
+        obs._metadata = meta_dict['data']
+        data.append(obs)
+
+    return table,data
+
+
 
 
 
@@ -740,17 +746,8 @@ def test():
     year = '2012'
 
 
-
-
-
-
-
     path              = download_nhc_gis_best_track(year,code)
     line,points,radii = read_gis_best_track(base,code)
-
-
-
-
 
     print('  > Get wind ocean information (ndbc)')
     wnd_ocn, wnd_ocn_table = get_ndbc(
@@ -795,10 +792,10 @@ def test():
                     wnd_obs =  wnd_obs , wnd_obs_table = wnd_obs_table)
 
 
-    bbox_txt = str(bbox).replace(' ','_').replace(',','_').replace('[','_').replace(']','_')
+    bbox_txt   = str(bbox).replace(' ','_').replace(',','_').replace('[','_').replace(']','_')
     scr_dir    = base_dir + '/' + name+year+'/'
     os.system('mkdir -p ' + scr_dir)
-    pickname = scr_dir + name+year+bbox_txt+'.pik2'
+    pickname   = scr_dir + name+year+bbox_txt+'.pik2'
     f = open(pickname, 'wb')
     pickle.dump(all_data,f,protocol=2)
 

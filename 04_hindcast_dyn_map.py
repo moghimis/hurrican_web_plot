@@ -392,7 +392,7 @@ def get_station_ssh(fort61):
     stationIDs = np.array(stationIDs)
     mod_table = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
    
-    return mod,mod_table
+    return mod, mod_table
     
 #################
 def get_station_wnd_all(fort61):
@@ -730,10 +730,10 @@ if read_pickle:
 else:
     base_dir = 'obs/'
     print (' read from CSV files')
-    ssh_table,ssh          = read_csv (base_dir, name, year, label='coops_ssh' )
-    wnd_obs_table,wnd_obs  = read_csv (base_dir, name, year, label='coops_wind')
-    wnd_ocn_table,wnd_ocn  = read_csv (base_dir, name, year, label='ndbc_wind' )
-    wav_ocn_table, wav_ocn, wav_ocn_meta  = read_csv (base_dir, name, year, label='ndbc_wave' )
+    ssh_table     , ssh       = read_csv (base_dir, name, year, label='coops_ssh' )
+    wnd_obs_table , wnd_obs   = read_csv (base_dir, name, year, label='coops_wind')
+    wnd_ocn_table , wnd_ocn   = read_csv (base_dir, name, year, label='ndbc_wind' )
+    wav_ocn_table , wav_ocn   = read_csv (base_dir, name, year, label='ndbc_wave' )
 
 
 
@@ -743,7 +743,7 @@ mod,mod_table = get_station_ssh(fort61)
 
 ############# Sea Surface height analysis ########################
 # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
-common  = set(ssh_table['station_code']).intersection(mod_table  ['station_code'].values)
+common  = set(ssh_table['station_code'].astype('str') ).intersection(mod_table  ['station_code'].astype('str'))
 
 ssh_obs, mod_obs = [], []
 for station in common:
@@ -751,33 +751,34 @@ for station in common:
     mod_obs.extend([obm for obm in mod   if obm._metadata                 == station])
 
 
-index = pd.date_range(
-    start = start_dt.replace(tzinfo=None),
-    end   = end_dt.replace  (tzinfo=None),
-    freq='15min'
-)
-#############################################################
-#organize and re-index both observations
-# Re-index and rename series.
-ssh_observations = []
-for series in ssh_obs:
-    _metadata = series._metadata
-    obs = series.reindex(index=index, limit=1, method='nearest')
-    obs._metadata = _metadata
-    obs.name = _metadata['station_name']
-    ssh_observations.append(obs)
+if False:
+    index = pd.date_range(
+        start = start_dt.replace(tzinfo=None),
+        end   = end_dt.replace  (tzinfo=None),
+        freq='15min'
+    )
+    #############################################################
+    #organize and re-index both observations
+    # Re-index and rename series.
+    ssh_observations = []
+    for series in ssh_obs:
+        _metadata = series._metadata
+        obs = series.reindex(index=index, limit=1, method='nearest')
+        obs._metadata = _metadata
+        obs.name = _metadata['station_name']
+        ssh_observations.append(obs)
 
-##############################################################
-#model
-model_observations = []
-for series in mod_obs:
-    _metadata = series._metadata
-    obs = series.reindex(index=index, limit=1, method='nearest')
-    obs._metadata = _metadata
-    obs.name = _metadata
-    obs['ssh'][np.abs(obs['ssh']) > 10] = np.nan
-    obs.dropna(inplace=True)
-    model_observations.append(obs)
+    ##############################################################
+    #model
+    model_observations = []
+    for series in mod_obs:
+        _metadata = series._metadata
+        obs = series.reindex(index=index, limit=1, method='nearest')
+        obs._metadata = _metadata
+        obs.name = _metadata
+        obs['ssh'][np.abs(obs['ssh']) > 10] = np.nan
+        obs.dropna(inplace=True)
+        model_observations.append(obs)
 
 ############# Wind obs and model analysis ########################
 try:
@@ -787,29 +788,29 @@ try:
 
 
     # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
-    commonw  = set(wnd_obs_table['station_code']).intersection(wnd_mod_table  ['station_code'].values)
+    commonw  = set(wnd_obs_table['station_code'].astype('str')).intersection(wnd_mod_table  ['station_code'].astype('str'))
 
     wobs, wmod = [], []
     for station in commonw:
         wobs.extend([obs for obs in wnd_obs   if obs._metadata['station_code'] == station])
         wmod.extend([obm for obm in wnd_mod   if obm._metadata                 == station])
 
-
-    index = pd.date_range(
-        start = start_dt.replace(tzinfo=None),
-        end   = end_dt.replace  (tzinfo=None),
-        freq='15min'
-    )
-    #############################################################
-    #organize and re-index both observations
-    # Re-index and rename series.
-    wnd_observs = []
-    for series in wobs:
-        _metadata = series._metadata
-        obs = series.reindex(index=index, limit=1, method='nearest')
-        obs._metadata = _metadata
-        obs.name = _metadata['station_name']
-        wnd_observs.append(obs)
+   if False:
+        index = pd.date_range(
+            start = start_dt.replace(tzinfo=None),
+            end   = end_dt.replace  (tzinfo=None),
+            freq='15min'
+        )
+        #############################################################
+        #organize and re-index both observations
+        # Re-index and rename series.
+        wnd_observs = []
+        for series in wobs:
+            _metadata = series._metadata
+            obs = series.reindex(index=index, limit=1, method='nearest')
+            obs._metadata = _metadata
+            obs.name = _metadata['station_name']
+            wnd_observs.append(obs)
 
     ##############################################################
     #model
@@ -834,16 +835,16 @@ try:
     wav_mod,wav_mod_table = get_station_wave(wav_at_nbdc)
 
     # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
-    df = wav_ocn_table
-    for col in df.columns:
-        try:
-            df[col]  = df[col].astype('S21') 
-        except:
-            pass
+    #df = wav_ocn_table
+    #for col in df.columns:
+    #    try:
+    #        df[col]  = df[col].astype('S21') 
+    #    except:
+    #        pass
     #wav_ocn_table ['station_code'] = wav_ocn_table['station_code'].astype('str')
     #wav_mod_table ['station_code'] = wav_mod_table['station_code'].astype('str') 
     
-    commonwav  = set(wav_ocn_table['station_code']).intersection(wav_mod_table['station_code'].values)
+    commonwav  = set(wav_ocn_table['station_code'].astype('str')).intersection(wav_mod_table['station_code'].astype('str'))
 
     wav_ocns, wav_mods = [], []
     for station in commonwav:
