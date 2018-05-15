@@ -482,7 +482,7 @@ def get_station_wnd(fort61):
     return mod,mod_table1
 
 
-def get_station_wave(wav_at_nbdc):
+def get_model_at_station_wave(wav_at_nbdc):
     """
     Read model wave
     
@@ -491,6 +491,7 @@ def get_station_wave(wav_at_nbdc):
     ncv0     = nc0.variables 
     sta_hsig =  ncv0['hsig'] [:].squeeze()
     sta_hsig [sta_hsig > 1e3 ] = 0.0
+    
     sta_date = netCDF4.num2date(ncv0['time'][:], ncv0['time'].units)
     sta_nam  = ncv0['station_name'][:].squeeze()
     sta_lon  = ncv0['lon'][:]
@@ -512,6 +513,37 @@ def get_station_wave(wav_at_nbdc):
     mod_table = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
     return mod,mod_table
 
+
+def get_model_at_station_wind(wnd_at_nbdc):
+    """
+    Read model wind
+    
+    """
+    nc0      = netCDF4.Dataset(wnd_at_nbdc)
+    ncv0     = nc0.variables 
+    sta_wnd =  np.sqrt ( ncv0['uwnd'] [:].squeeze() ** 2 +  ncv0['vwnd']        [:].squeeze() ** 2 )
+    sta_wnd [sta_wnd > 1e3 ] = 0.0
+    
+    sta_date = netCDF4.num2date(ncv0['time'][:], ncv0['time'].units)
+    sta_nam  = ncv0['station_name'][:].squeeze()
+    sta_lon  = ncv0['lon'][:]
+    sta_lat  = ncv0['lat'][:]
+    nc0.close()
+    
+    stationIDs = []
+    mod    = []
+    ind = np.arange(len(sta_lat))
+    for ista in ind:
+        stationID = sta_nam[ista][~sta_nam.mask[ista]].tostring().decode()
+        stationIDs.append(stationID)
+        mod_tmp = pd.DataFrame(data = np.c_[sta_date,sta_wnd[:,ista]],
+                               columns = ['date_time', 'wnd' ]).set_index('date_time')
+        mod_tmp._metadata = stationID
+        mod.append(mod_tmp)
+
+    stationIDs = np.array(stationIDs)
+    mod_table = pd.DataFrame(data = np.c_[ind, stationIDs], columns=['ind',  'station_code'])
+    return mod,mod_table
 
 #############################################################
 def make_map(bbox, **kw):
@@ -812,7 +844,7 @@ except:
 ############# Wave NDBC obs and model analysis ########################
 try:
     #read wave model data
-    wav_mod,wav_mod_table = get_station_wave(wav_at_nbdc)
+    wav_mod,wav_mod_table = get_model_at_station_wave(wav_at_nbdc)
     
     commonwav  = set(wav_ocn_table['station_code']).intersection(wav_mod_table['station_code'].values)
 
@@ -858,12 +890,12 @@ except:
 ############# wind NDBC obs and model analysis ########################
 try:
     #read wind model data
-    wnd_ocn_mod,wnd_ocn_mod_table = get_station_wnd(wnd_at_nbdc_____)
+    wnd_ocn_mod,wnd_ocn_mod_table = get_model_at_station_wind(wnd_at_nbdc)
     
-    commonwav  = set(wnd_ocn_table['station_code']).intersection(wnd_ocn_mod_table['station_code'].values)
+    commonwnd  = set(wnd_ocn_table['station_code']).intersection(wnd_ocn_mod_table['station_code'].values)
 
     wnd_ocns, wnd_ocn_mods = [], []
-    for station in commonwav:
+    for station in commonwnd:
         wnd_ocns.extend    ([obs for obs in wnd_ocn   if obs._metadata['station_code'] == station])
         wnd_ocn_mods.extend([obm for obm in wnd_ocn_mod   if obm._metadata                 == station])
 
@@ -881,7 +913,7 @@ try:
         obs = series.reindex(index=index, limit=1, method='nearest')
         obs._metadata = _metadata
         obs.name = _metadata['station_name']
-        wav_observs.append(obs)
+        wnd_ocn_observs.append(obs)
 
     ##############################################################
     #model
@@ -896,7 +928,7 @@ try:
         wnd_ocn_models.append(obs)
     wind_ndbc_stations = True  
 except:
-    print (' >  fort.61 does not include wave info ..')
+    print (' >  fort.61 does not include wind info ..')
     wind_ndbc_stations = False
 
 
