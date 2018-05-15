@@ -26,13 +26,12 @@ import cPickle as pickle
 import pandas as pd
 
 try:
-    os.system('rm base_info.pyc')
+    os.system('rm base_info_adc_plot.pyc')
 except:
     pass
-if 'base_info' in sys.modules:  
-    del(sys.modules["base_info"])
-import base_info
-
+if 'base_info_adc_plot' in sys.modules:  
+    del(sys.modules["base_info_adc_plot"])
+import base_info_adc_plot as base_info
 
 def find_nearest1d(xvec,yvec,xp,yp):
     """
@@ -230,44 +229,30 @@ for key in base_info.cases.keys():
         nch.close()
 
     
-    print ('Prepare max surge ..')
+    print ('>>> Prepare max surge ..')
     
-        fname  =  base_info.cases[base_info.key0]['dir'] + '/maxele.63.nc'
-        nc0    = netCDF4.Dataset(fname)
-        ncv0   = nc0.variables
-        zeta0  = ncv0['zeta_max'][:]
-        dep0   = ncv0['depth'][:]
-        date = None
-        
-        
-        fname_orig  =  base_info.cases[key]['dir'] + '/maxele.63.nc'
-        fname       =  base_info.cases[key]['dir'] + '/maxele.63_all.nc'
-        os.sys('cp -rf ' + fname_orig + '  ' + fname )
-        
-        nc1     = netCDF4.Dataset(fname)
-        ncv1    = nc1.variables
-        zeta1  = ncv1['zeta_max'][:]
-        
-        mask = zeta1 < 0
-        
-        #tri.set_mask = maskDryElementsTri(tri,mask)
-       
-        val = zeta1 - zeta0
-        #val = np.ma.masked_where(val<0,val)
-        
-        val[np.isnan(val)] = 0.0
-
-
-
-
-
-
-
-
-
-
-
-
+    fname  =  base_info.cases[base_info.key0]['dir'] + '/maxele.63.nc'
+    nc0    = n4.Dataset(fname)
+    ncv0   = nc0.variables
+    zeta0  = ncv0['zeta_max'][:]
+    nc0.close()
+    fname_orig  =  base_info.cases[key]['dir'] + '/maxele.63.nc'
+    fname       =  base_info.cases[key]['dir'] + '/maxele.63_all.nc'
+    os.system('cp -rf ' + fname_orig + '  ' + fname )
+    
+    nc1     = n4.Dataset(fname,'r+')
+    ncv1    = nc1.variables
+    zeta1  = ncv1['zeta_max'][:]
+    mask = zeta1 < 0
+    val = zeta1 - zeta0
+    val[np.isnan(val)] = 0.0
+    
+    node  = nc1.dimensions['node']
+    surge1 = nc1.createVariable(varname = 'surge', datatype='f8', dimensions=('node',))
+    surge1[:] = val
+    surge1.long_name = 'Max surge from max elev minus max tide in meter. Water Above Ground Level.'
+    surge1.short_name = 'Surge [m]'
+    nc1.close()
 
 print ('Organize and copy files ...')
 out_dir = '/scratch4/COASTAL/coastal/noscrub/Saeed.Moghimi/stmp10_sandy/z01_4web_plot/' + base_info.storm_name+'/'
@@ -281,7 +266,7 @@ for key in np.sort(base_info.cases.keys()):
     
     
     fnames = [
-        base_info.cases[key]['dir']+ '/maxele.63.nc',
+        base_info.cases[key]['dir']+ '/maxele.63_all.nc',
         base_info.cases[key]['dir']+ '/01_wave_on_ndbc_obs.nc',
         base_info.cases[key]['dir']+ '/01_wind_on_ndbc_obs.nc',
         base_info.cases[key]['dir']+ '/fort_wind.61.nc',
