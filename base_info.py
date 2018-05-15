@@ -44,7 +44,7 @@ year = '2012'
 plot_cones = True
 plot_sat   = False
 remove_mean_diff = True
-obs_xtra_days = datetime.timedelta(5)
+obs_xtra_days = datetime.timedelta(3)
 
 
 

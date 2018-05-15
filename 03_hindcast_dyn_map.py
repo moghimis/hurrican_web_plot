@@ -280,15 +280,15 @@ def make_plot(obs, model,label,remove_mean_diff=False):
     return p
 
 #################
-def make_marker(p, location, fname , color = 'green'):
+def make_marker(p, location, fname , color = 'green',icon= 'stats'):
     html = file_html(p, CDN, fname)
     iframe = IFrame(html, width=width+45, height=height+80)
 
     popup = folium.Popup(iframe, max_width=2650)
-    icon = folium.Icon(color = color, icon='stats')
+    iconm = folium.Icon(color = color, icon=icon)
     marker = folium.Marker(location=location,
                            popup=popup,
-                           icon=icon)
+                           icon=iconm)
     return marker
 
 ###############################
@@ -611,7 +611,7 @@ from cartopy.mpl.gridliner import (LONGITUDE_FORMATTER,
                                    LATITUDE_FORMATTER)
 import cartopy.feature as cfeature 
 
-def make_map(projection=ccrs.PlateCarree()):                                                                                                                                        
+def make_map_cartopy(projection=ccrs.PlateCarree()):                                                                                                                                        
                                                                                            
     """                                                                          
     Generate fig and ax using cartopy                                                                    
@@ -933,7 +933,7 @@ except:
 
 
 #######################################################
-print('  > Put together the final maps')
+print('  > Put together the final map')
 
 
 if False:
@@ -963,8 +963,8 @@ else:
                              overlay=False)
         w.add_to(m)
 
-
-print('     > Maxele plot..')
+#################################################################
+print('     > Plot max water elev ..')
 contour,MinVal,MaxVal,levels = Read_maxele_return_plot_obj(fgrd=fgrd,felev=felev)
 gdf = collec_to_gdf(contour) # From link above
 plt.close('all')
@@ -1002,8 +1002,8 @@ color_scale = folium.StepColormap(colors_elev,
     )
 m.add_child(color_scale)
 #
-####################
-print('     > Plot CO-Ops stations plot')
+#################################################################
+print('     > Plot CO-Ops stations ..')
 # ssh Observations stations 
 marker_cluster_coops = MarkerCluster(name='CO-OPs observations')
 marker_cluster_coops.add_to(m)
@@ -1015,9 +1015,9 @@ for ssh1, model1 in zip(ssh_observations, model_observations):
     marker = make_marker(p, location=location, fname=fname)
     marker.add_to(marker_cluster_coops)
 
-####################
+################################################################
 if wind_coops_stations:
-    print('     > Plot CO-Ops wind stations plot')
+    print('     > Plot CO-Ops wind stations ..')
     # Wind Observations stations.
     #marker_clusterw = MarkerCluster(name='Wind observations')
     #marker_clusterw.add_to(m)
@@ -1026,33 +1026,33 @@ if wind_coops_stations:
         location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
         p = make_plot(ssh1, model1,'Wind [m/s]')
         #p = make_plot(ssh1, ssh1)    
-        marker = make_marker(p, location=location, fname=fname, color = 'red')
+        marker = make_marker(p, location=location, fname=fname, color = 'gray',icon='flag')
         marker.add_to(marker_cluster_coops)
 
-####################
+#################################################################
 if wave_ndbc_stations or wind_ndbc_stations:
     marker_cluster_ndbc = MarkerCluster(name='NDBC observations')
     marker_cluster_ndbc.add_to(m)
 
 if wave_ndbc_stations:
-    print('     > Plot NDBC wave stations plot')
+    print('     > Plot NDBC wave stations ..')
 
     for ssh1, model1 in zip(wav_observs,wav_models):
         fname = ssh1._metadata['station_code']
         location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
         p = make_plot(ssh1, model1,'Hsig [m]')
         #p = make_plot(ssh1, ssh1)    
-        marker = make_marker(p, location=location, fname=fname, color = 'purple')
+        marker = make_marker(p, location=location, fname=fname, color = 'darkpurple',icon='record')
         marker.add_to(marker_cluster_ndbc)
 
 if wind_ndbc_stations:
-    print('     > Plot NDBC wind stations plot')
+    print('     > Plot NDBC wind stations ..')
     for ssh1, model1 in zip(wnd_ocn_observs,wnd_ocn_models):
         fname = ssh1._metadata['station_code']
         location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
         p = make_plot(ssh1, model1,'Wind [m/s]')
         #p = make_plot(ssh1, ssh1)    
-        marker = make_marker(p, location=location, fname=fname, color = 'green')
+        marker = make_marker(p, location=location, fname=fname, color = 'orange',icon='flag')
         marker.add_to(marker_cluster_ndbc)
 
 ###################        
@@ -1060,48 +1060,58 @@ if wind_ndbc_stations:
 # folium.LayerControl().add_to(m)
 p = folium.PolyLine(get_coordinates(bbox),
                     color='#009933',
-                    weight=1,
-                    opacity=0.5)
+                    weight=2,
+                    opacity=0.6)
 
 p.add_to(m)
-#################################### 
-# 
-
-###################
+##################################################### 
 print('     > Plot NHC cone predictions')
 
 if plot_cones:
     marker_cluster1 = MarkerCluster(name='Past predictions')
     marker_cluster1.add_to(m)
-    def style_function(feature):
+    def style_function_latest_cone(feature):
         return {
             'fillOpacity': 0,
-            'color': 'green',
+            'color': 'red',
             'stroke': 1,
             'weight': 0.3,
-            'opacity': 0.3,
+            'opacity': 0.5,
         }
 
+    def style_function_cones(feature):
+        return {
+            'fillOpacity': 0,
+            'color': 'lightblue',
+            'stroke': 1,
+            'weight': 0.3,
+            'opacity': 0.5,
+        }    
+    
+    
+    
+    
     track_radius = 4
     
     # Latest cone prediction.
     latest = cones[-1]
     ###
     if  'FLDATELBL' in points[0].keys():    #Newer storms have this information
-        names = 'Cone prediction as of {}'.format(latest['ADVDATE'].values[0])
+        names3 = 'Cone prediction as of {}'.format(latest['ADVDATE'].values[0])
     else:
-        names = 'Cone prediction'
+        names3 = 'Cone prediction'
     ###
     folium.GeoJson(
         data=latest.__geo_interface__,
-        name=names
+        name=names3,            
+        style_function=style_function_cones,
     ).add_to(m)
     ###
     # Past cone predictions.
     for cone in cones[:-1]:
         folium.GeoJson(
             data=cone.__geo_interface__,
-            style_function=style_function,
+            style_function=style_function_latest_cone,
         ).add_to(marker_cluster1)
 
     # Latest points prediction.
@@ -1124,8 +1134,8 @@ if plot_cones:
             color=color,
             popup=popup,
         ).add_to(m)
-
-print('     > Plot points along the final track')
+####################################################
+print('     > Plot points along the final track ..')
 #marker_cluster3 = MarkerCluster(name='Track')
 #marker_cluster3.add_to(m)
 
@@ -1148,8 +1158,8 @@ for point in points:
         popup=popup,
     ).add_to(m)
 
-
-print('     > Plot High Water Marks')
+####################################################
+print('     > Plot High Water Marks ..')
 df = pd.read_csv(fhwm)
 lon_hwm = df.lon.values
 lat_hwm = df.lat.values
@@ -1180,14 +1190,13 @@ for im in range (len(hwm)):
 
 folium.LayerControl().add_to(m)
 
-
 #################################################
-print ('     > Add disclaimer and storm name ...')
+print ('     > Add disclaimer and storm name ..')
 
 Disclaimer_html =   '''
                 <div style="position: fixed; 
                             bottom: 15px; left: 20px; width: 520px; height: 40px; 
-                            border:2px solid grey; z-index:9999; font-size:12px;
+                            border:2px solid grey; z-index:9999; font-size:12px; background-color: lightgray;
                             ">&nbsp; For Official Use Only. Pre-Decisional information not releasable outside US Government. <br>
                               &nbsp; Contact: CSDL/OCS/NOS/NOAA &nbsp; <br>
                 </div>
@@ -1200,7 +1209,7 @@ m.get_root().html.add_child(folium.Element(Disclaimer_html))
 storm_info_html ='''
                 <div style="position: fixed; 
                             bottom: 75px; left: 20px; width: 150px; height: 50px; 
-                            border:2px solid black; z-index:9999; font-size:18px;
+                            border:2px solid black; z-index:9999; font-size:18px;background-color: lightgray;
                             ">&nbsp; Storm: {} <br>
                               &nbsp; Year:  {}  &nbsp; <br>
                 </div>
@@ -1212,7 +1221,7 @@ m.get_root().html.add_child(folium.Element(storm_info_html))
 
 
 print ('     > Save file ...')
-fname = '{}_storm.html'.format(name.split()[-1].lower())
+fname = 'zz{}_storm.html'.format(name.split()[-1].lower())
 m.save(fname)
 
 
