@@ -305,7 +305,8 @@ def Read_maxele_return_plot_obj(fgrd='depth_hsofs_inp.nc',felev='maxele.63.nc'):
     nc0     = netCDF4.Dataset(felev)
     ncv0    = nc0.variables
     data    = ncv0['zeta_max'][:]
-    dep0    = ncv0['depth'][:]
+    #data    = ncv0['surge'][:]
+    #dep0    = ncv0['depth'][:]
     lon0    = ncv0['x'][:]
     lat0    = ncv0['y'][:]
     elems   = ncgv['element'][:,:]-1  # Move to 0-indexing by subtracting 1
@@ -845,11 +846,9 @@ except:
 try:
 
     #read wave model data
-<
     wav_mod,wav_mod_table = get_model_at_station_wave(wav_at_nbdc)
-    
     commonwav  = set(wav_ocn_table['station_code']).intersection(wav_mod_table['station_code'].values)
->
+
     wav_ocns, wav_mods = [], []
     for station in commonwav:
         wav_ocns.extend([obs for obs in wav_ocn   if obs._metadata['station_code'] == station])
