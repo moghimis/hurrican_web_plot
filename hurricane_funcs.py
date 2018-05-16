@@ -350,6 +350,13 @@ def get_ndbc(start, end, bbox , sos_name='waves',datum='MSL', verbose=True):
             col = ['wind_from_direction (degree)','wind_speed (m/s)',
                    'wind_speed_of_gust (m/s)','upward_air_velocity (m/s)']
    
+
+    if   sos_name == 'waves':
+            col = ['sea_surface_wave_significant_height (m)']
+    elif sos_name == 'winds':
+            col = ['wind_speed (m/s)']
+
+
     collector = NdbcSos()
     collector.set_bbox(bbox)
     collector.start_time = start
@@ -622,26 +629,21 @@ def obs_station_list_gen(bbox = [-99.0, 5.0, -52.8, 46.3]):
     ndbc_wave_stations.to_csv(out_dir + 'ndbc_wave_stations_hsofs.csv')
     ndbc_wind_stations.to_csv(out_dir + 'ndbc_wind_stations_hsofs.csv')
 #################
-
-
-def write_csv(base_dir, name, year, table, data, label):
+def write_csv(obs_dir, name, year, table, data, label):
     """
     examples
     print('  > write csv files')
-    write_csv(base_dir, name, year, table=wnd_ocn_table, data= wnd_ocn , label='ndbc_wind' )
-    write_csv(base_dir, name, year, table=wav_ocn_table, data= wav_ocn , label='ndbc_wave' )
-    write_csv(base_dir, name, year, table=ssh_table    , data= ssh     , label='coops_ssh' )
-    write_csv(base_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
+    write_csv(obs_dir, name, year, table=wnd_ocn_table, data= wnd_ocn , label='ndbc_wind' )
+    write_csv(obs_dir, name, year, table=wav_ocn_table, data= wav_ocn , label='ndbc_wave' )
+    write_csv(obs_dir, name, year, table=ssh_table    , data= ssh     , label='coops_ssh' )
+    write_csv(obs_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
     
     """
-
-
     #label   = 'coops_ssh'
-    #out_dir =  os.path.join(base_dir,name+year) 
     #table   = ssh_table
     #data    = ssh
 
-    outt    = os.path.join(base_dir,name+year,label)
+    outt    = os.path.join(obs_dir, name+year,label)
     outd    = os.path.join(outt,'data')  
     if not os.path.exists(outd):
         os.makedirs(outd)
@@ -650,16 +652,22 @@ def write_csv(base_dir, name, year, table, data, label):
     stations = table['station_code']
 
     for ista in range(len(stations)):
-        sta   = stations [ista]
-        fname = os.path.join(outd,sta)+'.csv'
-        data[ista].to_csv(fname)
+        sta   = str(stations [ista])
+        fname = os.path.join(outd,sta+'.csv')
+        df = data[ista]
+        try:
+            #in case it is still a series like ssh
+            df = df.to_frame()
+        except:
+            pass
+                
+        df.to_csv(fname)
         
         fmeta    = os.path.join(outd,sta)+'_metadata.csv'
         metadata = pd.DataFrame.from_dict( data[ista]._metadata , orient="index")
         metadata.to_csv(fmeta)
      
-
-def read_csv(base_dir, name, year, label):
+def read_csv(obs_dir, name, year, label):
     """
     examples
     print('  > write csv files')
@@ -669,32 +677,35 @@ def read_csv(base_dir, name, year, label):
     write_csv(base_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
     
     """
-    outt    = os.path.join(base_dir,name+year,label)
+    outt    = os.path.join(obs_dir, name+year,label)
     outd    = os.path.join(outt,'data')  
     if not os.path.exists(outd):
        sys.exit('ERROR',outd )
 
-    table = pd.read_csv(os.path.join(outt,'table.csv'))
+    table = pd.read_csv(os.path.join(outt,'table.csv')).set_index('station_name')
+    table['station_code'] = table['station_code'].astype('str')
     stations = table['station_code']
 
     data     = []
     metadata = []
     for ista in range(len(stations)):
         sta   = stations [ista]
-        fname = os.path.join(outd,str(sta))+'.csv'
-        obs = pd.read_csv(fname, names=['date_time','value']).set_index('date_time')
-
-        fmeta = os.path.join(outd,str(sta)) + '_metadata.csv'
-        meta  = pd.read_csv(fmeta,names=['names','data']).set_index('names')
-        meta_dict  = meta.to_dict()
-        metadata.append(meta)
-        obs._metadata = meta_dict['data']
-        data.append(obs)
-
+        fname8 = os.path.join(outd,sta)+'.csv'
+        df = pd.read_csv(fname8,parse_dates = ['date_time']).set_index('date_time')
+        
+        fmeta = os.path.join(outd,sta) + '_metadata.csv'
+        meta  = pd.read_csv(fmeta, header=0, names = ['names','info']).set_index('names')
+        
+        meta_dict = meta.to_dict()['info']
+        meta_dict['lon'] = float(meta_dict['lon'])
+        meta_dict['lat'] = float(meta_dict['lat'])        
+        df._metadata = meta_dict
+        data.append(df)
+    
     return table,data
-
-
-
+    
+    
+    
 
 
 
@@ -746,8 +757,17 @@ def test():
     year = '2012'
 
 
+
+
+
+
+
     path              = download_nhc_gis_best_track(year,code)
     line,points,radii = read_gis_best_track(base,code)
+
+
+
+
 
     print('  > Get wind ocean information (ndbc)')
     wnd_ocn, wnd_ocn_table = get_ndbc(
@@ -792,10 +812,10 @@ def test():
                     wnd_obs =  wnd_obs , wnd_obs_table = wnd_obs_table)
 
 
-    bbox_txt   = str(bbox).replace(' ','_').replace(',','_').replace('[','_').replace(']','_')
+    bbox_txt = str(bbox).replace(' ','_').replace(',','_').replace('[','_').replace(']','_')
     scr_dir    = base_dir + '/' + name+year+'/'
     os.system('mkdir -p ' + scr_dir)
-    pickname   = scr_dir + name+year+bbox_txt+'.pik2'
+    pickname = scr_dir + name+year+bbox_txt+'.pik2'
     f = open(pickname, 'wb')
     pickle.dump(all_data,f,protocol=2)
 
