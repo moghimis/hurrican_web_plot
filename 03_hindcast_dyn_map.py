@@ -63,6 +63,7 @@ import fiona
 
 from bokeh.resources import CDN
 from bokeh.plotting import figure
+from bokeh.models import Title
 from bokeh.embed import file_html
 from bokeh.models import Range1d, LinearAxis, HoverTool
 
@@ -141,7 +142,7 @@ tools = "pan,box_zoom,reset"
 width, height = 750, 250
 
 
-def make_plot_wind(ssh, wind):
+def make_plot_2axes(ssh, wind):
     p = figure(toolbar_location='above',
                x_axis_type='datetime',
                width=width,
@@ -211,14 +212,14 @@ def make_plot(obs, model,label,remove_mean_diff=False):
     #TOOLS="hover,crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,undo,redo,reset,tap,save,box_select,poly_select,lasso_select,"
     TOOLS="crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,reset,save,"
     
-    title = obs._metadata['station_name'] + ' (' + obs._metadata['station_code']+')'
-    
     p = figure(toolbar_location='above',
                x_axis_type='datetime',
                width=width,
                height=height,
-               tools=TOOLS,
-               title=title)
+               tools=TOOLS)
+
+    p.add_layout(Title(text='Station: '+obs._metadata['station_code'], text_font_style="italic"), 'above')
+    p.add_layout(Title(text=obs._metadata['station_name'], text_font_size="10pt"), 'above')
 
     p.yaxis.axis_label = label
 
@@ -963,7 +964,7 @@ for dir0 in dirs[:]:
         Fullscreen(position='topright', force_separate_button=True).add_to(m)
 
 
-        add = 'MapServer/tile/{z}/{y}/{x}'
+        add  = 'MapServer/tile/{z}/{y}/{x}'
         base = 'http://services.arcgisonline.com/arcgis/rest/services'
         ESRI = dict(Imagery='World_Imagery/MapServer')
 
