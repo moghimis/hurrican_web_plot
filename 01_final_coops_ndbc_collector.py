@@ -14,17 +14,15 @@ __copyright__ = "Copyright 2018, UCAR/NOAA"
 __license__ = "GPL"
 __version__ = "1.0"
 __email__ = "moghimis@gmail.com"
-
-
-
+#
 import pandas as pd
 import numpy as np
-
+#
 from bs4 import BeautifulSoup
 import requests
 import lxml.html
 import sys,os
-
+#
 from pyoos.collectors.ndbc.ndbc_sos import NdbcSos
 from pyoos.collectors.coops.coops_sos import CoopsSos
 from retrying import retry
@@ -33,7 +31,7 @@ import cf_units
 from io import BytesIO
 from ioos_tools.ioos import collector2table
 import pickle 
-
+#
 import geopandas as gpd
 #####################################################
 try:
@@ -55,15 +53,14 @@ if 'base_info' in sys.modules:
     del(sys.modules["base_info"])
 from base_info import *
 ####################################################
-
+#
 import arrow
-        
+#       
 if False:
     # not needed. will take from the storm specific obs list from coops and ndbc
     obs_station_list_gen()
-
-
-
+#
+#######
 code,hurricane_gis_files = get_nhc_storm_info (year,name)
 base                     = download_nhc_gis_best_track(year,code)
 line,points,radii = read_gis_best_track(base,code)
@@ -83,9 +80,12 @@ end_dt   = arrow.get(end_txt  , 'YYYYMMDDhh').datetime + obs_xtra_days
 # Note that the bounding box is derived from the track and the latest prediction cone.
 strbbox = ', '.join(format(v, '.2f') for v in bbox)
 print('bbox: {}\nstart: {}\n  end: {}'.format(strbbox, start_dt, end_dt))
-
-
-######
+#
+#########
+# out dir
+obs_dir = os.path.join(base_dir,'obs')
+#
+#######
 print('  > Get water level information  CO-OPS')
 ssh, ssh_table = get_coops(
     start=start_dt,
@@ -94,10 +94,11 @@ ssh, ssh_table = get_coops(
     units=cf_units.Unit('meters'),
     datum = 'MSL',
     bbox=bbox,
-)
+    )
 
+write_csv(obs_dir, name, year, table=ssh_table    , data= ssh     , label='coops_ssh' )
 
-######
+#######
 print('  > Get wind information CO-OPS')
 wnd_obs, wnd_obs_table = get_coops(
     start=start_dt,
@@ -107,7 +108,9 @@ wnd_obs, wnd_obs_table = get_coops(
     bbox=bbox,
     )
 
-#####
+write_csv(obs_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
+
+######
 print('  > Get wind ocean information (ndbc)')
 wnd_ocn, wnd_ocn_table = get_ndbc(
     start=start_dt,
@@ -116,7 +119,9 @@ wnd_ocn, wnd_ocn_table = get_ndbc(
     bbox=bbox,
     )
 
-#####
+write_csv(obs_dir, name, year, table=wnd_ocn_table, data= wnd_ocn , label='ndbc_wind' )
+
+######
 print('  > Get wave ocean information (ndbc)')
 wav_ocn, wav_ocn_table = get_ndbc(
     start=start_dt,
@@ -125,16 +130,8 @@ wav_ocn, wav_ocn_table = get_ndbc(
     bbox=bbox,
     )
 
-
-# out dir
-obs_dir = os.path.join(base_dir,'obs')
-
-print('  > write csv files')
-write_csv(obs_dir, name, year, table=ssh_table    , data= ssh     , label='coops_ssh' )
-write_csv(obs_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
-write_csv(obs_dir, name, year, table=wnd_ocn_table, data= wnd_ocn , label='ndbc_wind' )
 write_csv(obs_dir, name, year, table=wav_ocn_table, data= wav_ocn , label='ndbc_wave' )
-
+######
 
 if False:
     # test reading files
@@ -148,6 +145,7 @@ if False:
 # back up script file
 args=sys.argv
 scr_name = args[0]
+scr_dir = os.path.join(obs_dir, name+year,label)
 os.system('cp -fr ' + scr_name + '    ' + scr_dir)
 #
 #with open(pick, "rb") as f:

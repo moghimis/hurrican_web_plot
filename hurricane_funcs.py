@@ -351,10 +351,10 @@ def get_ndbc(start, end, bbox , sos_name='waves',datum='MSL', verbose=True):
                    'wind_speed_of_gust (m/s)','upward_air_velocity (m/s)']
    
 
-    if   sos_name == 'waves':
-            col = ['sea_surface_wave_significant_height (m)']
-    elif sos_name == 'winds':
-            col = ['wind_speed (m/s)']
+    #if   sos_name == 'waves':
+    #        col = ['sea_surface_wave_significant_height (m)']
+    #elif sos_name == 'winds':
+    #        col = ['wind_speed (m/s)']
 
 
     collector = NdbcSos()

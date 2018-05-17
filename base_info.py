@@ -24,8 +24,8 @@ import sys,os
 import datetime
 
 
-base_dir = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
-
+# base_dir = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
+base_dir = '/data01/data01/01-projects/07-NOAA-CoastalAct/04-working/02-hurricane/hurrican_web_plot/'
 
 
 name = 'SANDY'
