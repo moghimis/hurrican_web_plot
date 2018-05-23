@@ -26,12 +26,12 @@ import cPickle as pickle
 import pandas as pd
 
 try:
-    os.system('rm base_info_adc_plot.pyc')
+    os.system('rm base_info.pyc')
 except:
     pass
-if 'base_info_adc_plot' in sys.modules:  
-    del(sys.modules["base_info_adc_plot"])
-import base_info_adc_plot as base_info
+if 'base_info' in sys.modules:  
+    del(sys.modules["base_info"])
+import base_info
 
 def find_nearest1d(xvec,yvec,xp,yp):
     """
@@ -61,6 +61,9 @@ key  = '02-atm:y-tid:y-wav:y-try01'
 name  = 'SANDY'
 year  = '2012'
 
+name  = 'IRENE'
+year  = '2011'
+
 print (' > Read Obs stas ...')
 sta_info_dir = '/scratch4/COASTAL/coastal/save/Saeed.Moghimi/models/NEMS/NEMS_inps/01_data/coops_ndbc_data/' 
 ndbc_wave_sta_file = os.path.join(sta_info_dir,name+year,'ndbc_wave','table.csv')
@@ -83,22 +86,36 @@ for key in base_info.cases.keys():
     print ('>>> ',key ,  base_info.cases[key]['label'])  
     ########
     wind_inp = glob.glob(base_info.cases[key]['dir'] +'/inp_atmesh/*')
-    if len(wind_inp) > 0:
-        wind_inp = wind_inp[0]
-        
-        print (' > Wind results ...')
-        
-        ncw  = n4.Dataset(wind_inp,'r')
-        ncvw = ncw.variables 
-        lonw = ncvw['longitude'][:]
-        latw = ncvw['latitude' ][:]
-        uwnd = ncvw['uwnd'][:]
-        vwnd = ncvw['vwnd'][:]
-        pres = ncvw['P']   [:]
-        wind_dates = n4.num2date(ncvw['time'][:],units=ncvw['time'].units)
-        nt_wind = len(wind_dates)
+    wind_out = base_info.cases[key]['dir']+'/fort.74.nc'
+    
+    print (' > Wind results ...')
+    if len(wind_inp) > 0 or os.path.exists(wind_out):
+        if len(wind_inp) > 0:
+            ncw  = n4.Dataset(wind_inp,'r')
+            ncvw = ncw.variables 
+            lonw = ncvw['longitude'][:]
+            latw = ncvw['latitude' ][:]
+            uwnd = ncvw['uwnd'][:]
+            vwnd = ncvw['vwnd'][:]
+            pres = ncvw['P']   [:]
+            wind_dates = n4.num2date(ncvw['time'][:],units=ncvw['time'].units)
+            nt_wind = len(wind_dates)
 
-        
+        elif os.path.exists(wind_out):
+            #
+            ncw  = n4.Dataset(wind_out,'r')
+            ncvw = ncw.variables 
+            lonw = ncvw['x'][:]
+            latw = ncvw['y' ][:]
+            uwnd = ncvw['windx'][:]
+            vwnd = ncvw['windy'][:]
+            wind_dates = n4.num2date(ncvw['time'][:],units=ncvw['time'].units)
+            nt_wind = len(wind_dates)  
+            #
+            ncp  = n4.Dataset(base_info.cases[key]['dir']+'/fort.73.nc','r')                 
+            pres = ncp.variables['pressure'][:]
+            ncp.close()
+
         #
         uwnds = np.zeros ((nt_wind,nloc_wind))
         vwnds = np.zeros_like(uwnds)
