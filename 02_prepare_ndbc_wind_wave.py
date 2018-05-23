@@ -102,7 +102,7 @@ for key in base_info.cases.keys():
     print (' > Wind results ...')
     if len(wind_inp) > 0 or os.path.exists(wind_out):
         if len(wind_inp) > 0:
-            ncw  = n4.Dataset(wind_inp,'r')
+            ncw  = n4.Dataset(wind_inp[0],'r')
             ncvw = ncw.variables 
             lonw = ncvw['longitude'][:]
             latw = ncvw['latitude' ][:]
