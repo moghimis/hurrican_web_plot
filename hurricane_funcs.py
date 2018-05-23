@@ -602,6 +602,16 @@ def get_mask(bbox,lons,lats):
     
     return mask
 
+def get_ind(bbox,lons,lats):
+    [ind]  =   np.where(( lons > bbox[0]) & 
+                       ( lons < bbox[2]) & 
+                       ( lats > bbox[1]) & 
+                       ( lats < bbox[3]))
+    
+    return ind
+
+
+
 #################
 def obs_station_list_gen(bbox = [-99.0, 5.0, -52.8, 46.3]):
     """

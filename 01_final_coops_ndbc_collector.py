@@ -64,6 +64,8 @@ if False:
 code,hurricane_gis_files = get_nhc_storm_info (year,name)
 base                     = download_nhc_gis_best_track(year,code)
 line,points,radii = read_gis_best_track(base,code)
+download_nhc_best_track(year,code)
+
 #
 bounds = np.array(points.buffer(2).bounds)
 lons = np.r_[bounds[:,0],bounds[:,2]]
@@ -145,7 +147,7 @@ if False:
 # back up script file
 args=sys.argv
 scr_name = args[0]
-scr_dir = os.path.join(obs_dir, name+year,label)
+scr_dir = os.path.join(obs_dir, name+year)
 os.system('cp -fr ' + scr_name + '    ' + scr_dir)
 #
 #with open(pick, "rb") as f:

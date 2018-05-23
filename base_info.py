@@ -24,12 +24,15 @@ import sys,os
 import datetime
 
 
-# base_dir = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
-base_dir = '/data01/data01/01-projects/07-NOAA-CoastalAct/04-working/02-hurricane/hurrican_web_plot/'
+base_dir = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
+#base_dir = '/data01/data01/01-projects/07-NOAA-CoastalAct/04-working/02-hurricane/hurrican_web_plot/'
 
+#name = 'IRENE'
+#year = '2011'
 
 name = 'SANDY'
 year = '2012'
+
 
 #year    = '2017'
 #name    = 'IRMA'
@@ -43,13 +46,21 @@ year = '2012'
 
 plot_cones = True
 plot_sat   = False
-remove_mean_diff = True
+
 obs_xtra_days = datetime.timedelta(2)
 
 
+remove_mean_diff = False
+
+apply_bbox_bias = True
+#San_area2
+bias_bbox = [  -75.9 ,  38.5 ,  -73.3 , 41.3 ]
+bias_calc_start =  datetime.datetime(2012, 10, 22, 11, 0)
+bias_calc_end   =  datetime.datetime(2012, 10, 29, 23, 0)
 
 
-
+if apply_bbox_bias and remove_mean_diff:
+    sys.exit('ERROR: only one can be True ... ')
 
 
 
