@@ -351,10 +351,10 @@ def get_ndbc(start, end, bbox , sos_name='waves',datum='MSL', verbose=True):
                    'wind_speed_of_gust (m/s)','upward_air_velocity (m/s)']
    
 
-    if   sos_name == 'waves':
-            col = ['sea_surface_wave_significant_height (m)']
-    elif sos_name == 'winds':
-            col = ['wind_speed (m/s)']
+    #if   sos_name == 'waves':
+    #        col = ['sea_surface_wave_significant_height (m)']
+    #elif sos_name == 'winds':
+    #        col = ['wind_speed (m/s)']
 
 
     collector = NdbcSos()
@@ -601,6 +601,16 @@ def get_mask(bbox,lons,lats):
                     ( lats < bbox[3]))
     
     return mask
+
+def get_ind(bbox,lons,lats):
+    [ind]  =   np.where(( lons > bbox[0]) & 
+                       ( lons < bbox[2]) & 
+                       ( lats > bbox[1]) & 
+                       ( lats < bbox[3]))
+    
+    return ind
+
+
 
 #################
 def obs_station_list_gen(bbox = [-99.0, 5.0, -52.8, 46.3]):

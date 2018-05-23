@@ -25,6 +25,8 @@ import time
 import cPickle as pickle
 import pandas as pd
 
+
+### simulation information
 try:
     os.system('rm base_info.pyc')
 except:
@@ -32,6 +34,18 @@ except:
 if 'base_info' in sys.modules:  
     del(sys.modules["base_info"])
 import base_info
+
+
+#html folium and observation information
+try:
+    os.system('rm __pycache__/base_info_folium*.pyc'  )
+    os.system('rm base_info_folium*.pyc'  )
+except:
+    pass
+if 'base_info_folium' in sys.modules:  
+    del(sys.modules["base_info_folium"])
+from base_info_folium import *
+
 
 def find_nearest1d(xvec,yvec,xp,yp):
     """
@@ -50,19 +64,16 @@ def model_on_data(data_dates, model_dates, model_val):
     return np.interp(data_sec, model_sec, model_val)
 
 # Ike
-key  = '10-atm:y-tid:y-wav:y'
-
+#key  = '10-atm:y-tid:y-wav:y'
 #Sandy
-key  = '01-atm:y-tid:y-wav:n'
-key  = '02-atm:y-tid:y-wav:y-try01'
-
-
+#key  = '01-atm:y-tid:y-wav:n'
+#key  = '02-atm:y-tid:y-wav:y-try01'
 #########################################################
-name  = 'SANDY'
-year  = '2012'
+#name  = 'SANDY'
+#year  = '2012'
 
-name  = 'IRENE'
-year  = '2011'
+#name  = 'IRENE'
+#year  = '2011'
 
 print (' > Read Obs stas ...')
 sta_info_dir = '/scratch4/COASTAL/coastal/save/Saeed.Moghimi/models/NEMS/NEMS_inps/01_data/coops_ndbc_data/' 
@@ -272,7 +283,7 @@ for key in base_info.cases.keys():
     nc1.close()
 
 print ('Organize and copy files ...')
-out_dir = '/scratch4/COASTAL/coastal/noscrub/Saeed.Moghimi/stmp10_sandy/z01_4web_plot/' + base_info.storm_name+'/'
+out_dir = base_info.base_dir_sm + '/z01_4web_plot/' + base_info.storm_name+'/'
 
 
 for key in np.sort(base_info.cases.keys()):
