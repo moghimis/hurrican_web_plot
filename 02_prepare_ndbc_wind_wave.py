@@ -57,7 +57,7 @@ def find_nearest1d(xvec,yvec,xp,yp):
     return i[0],dist.min()
 
 def model_on_data(data_dates, model_dates, model_val):
-    print ('  >>>>>>>>>>>>>>>   ')
+    #print ('  >>>>>>>>>>>>>>>   ')
     units     = 'seconds since 2012-04-01 00:00:00'
     data_sec  = n4.date2num(data_dates , units)
     model_sec = n4.date2num(model_dates, units)
@@ -184,6 +184,45 @@ for key in base_info.cases.keys():
         nc.close()
         ncw.close()
         #sys.exit()
+    
+        #########################################################
+        print (' > Read CO-OPS Obs stations ...')
+        ## We add wind from model at the same place as water elevation
+        #
+        tmp    = base_info.cases[key]['dir'] + '/fort.61.nc'
+        fort61 = base_info.cases[key]['dir'] + '/fort_wind.61.nc'
+        #
+        os.system('cp -rf ' + tmp + '  ' + fort61)
+        nc0 = n4.Dataset(fort61,'r+')
+        ncv0 = nc0.variables 
+        lons = ncv0['x'][:]
+        lats = ncv0['y'][:]
+        zeta = ncv0['zeta'][:]
+        sdates = n4.num2date(ncv0['time'][:],units=ncv0['time'].units)
+        
+        #
+        uwnds = np.zeros_like(zeta)
+        vwnds = np.zeros_like(zeta)
+        press = np.zeros_like(zeta)  
+        #
+        for ip in range(len(lons)):
+            #print (ip)
+            [i],prox = find_nearest1d(xvec = lonw,yvec = latw, xp = lons[ip],yp = lats[ip])
+            uwnds[:,ip] = model_on_data(data_dates=sdates, model_dates=wind_dates, model_val=uwnd[:,i]) 
+            vwnds[:,ip] = model_on_data(data_dates=sdates, model_dates=wind_dates, model_val=vwnd[:,i])
+            press[:,ip] = model_on_data(data_dates=sdates, model_dates=wind_dates, model_val=pres[:,i])
+        
+        
+        uwind1 =  nc0.createVariable(varname = 'uwnd', datatype='f8', dimensions=('time','station',))
+        vwind1 =  nc0.createVariable(varname = 'vwnd', datatype='f8', dimensions=('time','station',))
+        press1 =  nc0.createVariable(varname = 'pres', datatype='f8', dimensions=('time','station',))
+        
+        uwind1[:,:] = uwnds[:,:]
+        vwind1[:,:] = vwnds[:,:]
+        press1[:,:] = press[:,:]
+        
+        nc0.close()    
+    
     
     wave_inp = glob.glob(base_info.cases[key]['dir'] +'/inp_wavdata/*')
     if len(wave_inp) > 0:
