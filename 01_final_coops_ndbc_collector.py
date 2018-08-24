@@ -6,6 +6,10 @@ from __future__ import division,print_function
 """
 Read obs from NDBC and Co-opc
 
+# For IKE and Isable pts files in al092008_5day_052.zip are available
+
+
+
 
 """
 
@@ -52,7 +56,18 @@ except:
 if 'base_info' in sys.modules:  
     del(sys.modules["base_info"])
 from base_info import *
-####################################################
+
+
+if 'base_info_folium' in sys.modules:  
+    del(sys.modules["base_info_folium"])
+from base_info_folium import *
+
+
+print('\n\n\n\n\n\n********************************************************')
+print(            '*****  Storm name ',name, '      Year ',  year, '    *********')
+print(            '******************************************************** \n\n\n\n\n\n')
+
+
 #
 import arrow
 #       
@@ -61,27 +76,48 @@ if False:
     obs_station_list_gen()
 #
 #######
-code,hurricane_gis_files = get_nhc_storm_info (year,name)
-base                     = download_nhc_gis_best_track(year,code)
-line,points,radii = read_gis_best_track(base,code)
-download_nhc_best_track(year,code)
+
+if int (year) > 2008:
+    #for storms after 2010 works
+    code,hurricane_gis_files = get_nhc_storm_info (year,name)
+    base                     = download_nhc_gis_best_track(year,code)
+    line,points,radii = read_gis_best_track(base,code)
+    download_nhc_best_track(year,code)
+    #
+    start_txt = str (np.array( points.DTG)[ 0])
+    end_txt   = str (np.array( points.DTG)[-1])
+else:
+    #for IKE
+    #read file info
+    code,hurricane_gis_files = get_nhc_storm_info (year,name)
+    #donload gis zip files
+    base = download_nhc_gis_files(hurricane_gis_files)
+    # get advisory cones and track points
+    cones,po,points = read_advisory_cones_info(hurricane_gis_files,base,year,code)
+    start    = po[0] ['ADVDATE']
+    end      = po[-1]['ADVDATE']
+    
+    start_txt = ('20' + start[:-2]).replace('/','')
+    end_txt   = ('20' + end  [:-2]).replace('/','')
+
+    print('\n\n\n\n  >>>>> Download and read all GIS data for Storm >',name, '      Year > ', year, '\n     **  This is an old STORM !!!!!! \n\n\n\n')
 
 #
 bounds = np.array(points.buffer(2).bounds)
-lons = np.r_[bounds[:,0],bounds[:,2]]
-lats = np.r_[bounds[:,1],bounds[:,3]]
+lons   = np.r_[bounds[:,0],bounds[:,2]]
+lats   = np.r_[bounds[:,1],bounds[:,3]]
 #
 bbox = lons.min(), lats.min(), lons.max(), lats.max()
-#
-start_txt = str (np.array( points.DTG)[ 0])
-end_txt   = str (np.array( points.DTG)[-1])
 #
 start_dt = arrow.get(start_txt, 'YYYYMMDDhh').datetime - obs_xtra_days
 end_dt   = arrow.get(end_txt  , 'YYYYMMDDhh').datetime + obs_xtra_days
 #
 # Note that the bounding box is derived from the track and the latest prediction cone.
 strbbox = ', '.join(format(v, '.2f') for v in bbox)
+print('\n\n\n\n\n\n********************************************************')
+print(            '*****  Storm name ',name, '      Year ',  year, '    *********')
 print('bbox: {}\nstart: {}\n  end: {}'.format(strbbox, start_dt, end_dt))
+print(            '******************************************************** \n\n\n\n\n\n')
 #
 #########
 # out dir

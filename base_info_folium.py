@@ -24,24 +24,46 @@ import sys,os
 import datetime
 
 
-base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
-#base_dir = '/data01/data01/01-projects/07-NOAA-CoastalAct/04-working/02-hurricane/hurrican_web_plot/'
+#base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
+base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot/'
 
-name = 'IRENE'
-year = '2011'
+#
+#year    = '2008'
+#name    = 'IKE'
 
-#name = 'SANDY'
-#year = '2012'
-
+#no GIS data
+#year    = '2003'
+#name    = 'ISABEL'
 
 #year    = '2017'
 #name    = 'IRMA'
 
-#year    = '2016'
-#name    = 'MATTHEW'
+#name = 'SANDY'
+#year = '2012'
 
-#year    = '2008'
-#name    = 'IKE'
+#name = 'IRENE'
+#year = '2011'
+
+#name = 'HARVEY'
+#year = '2017'
+
+#name = 'MARIA'
+#year = '2017'
+
+#name = 'MATTHEW'
+#year = '2016'
+
+#name = 'ISAAC'
+#year = '2012'
+
+#name = 'HERMINE'
+#year = '2016'
+
+#name = 'ARTHUR'
+#year = '2014'
+
+
+
 
 
 plot_cones = True
