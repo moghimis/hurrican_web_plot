@@ -27,6 +27,12 @@ import datetime
 #base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
 base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot/'
 
+
+
+
+
+
+
 #
 #year    = '2008'
 #name    = 'IKE'
@@ -59,14 +65,14 @@ base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurr
 #name = 'HERMINE'
 #year = '2016'
 
-#name = 'ARTHUR'
-#year = '2014'
+name = 'ARTHUR'
+year = '2014'
 
 
 
 
 
-plot_cones = True
+plot_cones = False
 plot_sat   = False
 
 obs_xtra_days = datetime.timedelta(2)

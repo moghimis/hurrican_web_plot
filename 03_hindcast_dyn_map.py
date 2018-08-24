@@ -206,8 +206,12 @@ def make_plot_2axes(ssh, wind):
     return p
 
 
-def make_plot(obs, model,label,remove_mean_diff=False,bbox_bias=None):
-    
+
+
+
+
+
+def make_plot_obs(obs,label=None):    
     #TOOLS="hover,crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,undo,redo,reset,tap,save,box_select,poly_select,lasso_select,"
     TOOLS="crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,reset,save,"
     
@@ -222,29 +226,8 @@ def make_plot(obs, model,label,remove_mean_diff=False,bbox_bias=None):
 
     p.yaxis.axis_label = label
 
-    mod_val = model.values.squeeze()
     obs_val = obs.values.squeeze()
-
-    if ('SSH' in label) and remove_mean_diff:
-        mod_val = mod_val + obs_val.mean() - mod_val.mean()
-
-    if ('SSH' in label) and bbox_bias is not None:
-        mod_val = mod_val + bbox_bias
-        
-
-
-    l0 = p.line(
-        x=model.index,
-        y=mod_val,
-        line_width=5,
-        line_cap='round',
-        line_join='round',
-        legend='model',
-        color='#9900cc',
-        alpha=0.7,
-    )
-  
-
+    
     l1 = p.line(
         x=obs.index,
         y=obs_val,
@@ -256,12 +239,91 @@ def make_plot(obs, model,label,remove_mean_diff=False,bbox_bias=None):
         alpha=0.7,
     )
     
-    minx = max (model.index.min(),obs.index.min())
-    maxx = min (model.index.max(),obs.index.max())    
+
+    minx = obs.index.min()
+    maxx = obs.index.max()
+
     
-    minx = model.index.min()
-    maxx = model.index.max()
+    p.x_range = Range1d(
+        start = minx,
+        end   = maxx
+    )
     
+    
+    p.legend.location = 'top_left'
+
+    p.add_tools(
+        HoverTool(
+            tooltips=[
+                ('obs.', '@y'),
+            ],
+            renderers=[l1],
+        ),
+    )
+    return p
+
+
+
+#def make_plot(obs, model = None,label,remove_mean_diff=False,bbox_bias=None):
+def make_plot(obs, model = None,label=None,remove_mean_diff=False,bbox_bias=None):    
+    #TOOLS="hover,crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,undo,redo,reset,tap,save,box_select,poly_select,lasso_select,"
+    TOOLS="crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,reset,save,"
+    
+    p = figure(toolbar_location='above',
+               x_axis_type='datetime',
+               width=width,
+               height=height,
+               tools=TOOLS)
+
+    p.add_layout(Title(text='Station: '+obs._metadata['station_code'], text_font_style="italic"), 'above')
+    p.add_layout(Title(text=obs._metadata['station_name'], text_font_size="10pt"), 'above')
+
+    p.yaxis.axis_label = label
+
+    obs_val = obs.values.squeeze()
+    
+    l1 = p.line(
+        x=obs.index,
+        y=obs_val,
+        line_width=5,
+        line_cap='round',
+        line_join='round',
+        legend='obs.',
+        color='#0000ff',
+        alpha=0.7,
+    )
+    
+
+    if model is not None:
+        if ('SSH' in label) and remove_mean_diff:
+            mod_val = mod_val + obs_val.mean() - mod_val.mean()
+
+        if ('SSH' in label) and bbox_bias is not None:
+            mod_val = mod_val + bbox_bias
+
+        mod_val = model.values.squeeze()
+        l0 = p.line(
+            x=model.index,
+            y=mod_val,
+            line_width=5,
+            line_cap='round',
+            line_join='round',
+            legend='model',
+            color='#9900cc',
+            alpha=0.7,
+        )
+  
+
+
+        minx = max (model.index.min(),obs.index.min())
+        maxx = min (model.index.max(),obs.index.max())    
+        
+        minx = model.index.min()
+        maxx = model.index.max()
+    else:
+        minx = obs.index.min()
+        maxx = obs.index.max()
+
     
     p.x_range = Range1d(
         start = minx,
@@ -738,7 +800,6 @@ obs_dir = os.path.join(base_dirf,'obs')
 mod_dir = os.path.join(base_dirf,'mod')
 
 
-
 print ( ' > Read NHC information ... ')
 code,hurricane_gis_files = get_nhc_storm_info (year,name)
 
@@ -749,6 +810,10 @@ base = download_nhc_gis_files(hurricane_gis_files)
 cones,points,pts = read_advisory_cones_info(hurricane_gis_files,base,year,code)
 
 #######################################
+print('\n\n\n\n\n\n********************************************************')
+print(            '*****  Storm name ',name, '      Year ',  year, '    *********')
+print(            '******************************************************** \n\n\n\n\n\n')
+
 #######################################
 
 fgrd      = os.path.join(mod_dir,'depth_hsofs_inp.nc')
@@ -1102,11 +1167,12 @@ for dir0 in dirs[:]:
         print('WARNING: ADCIRC maxelev in not available!')
     #
     #################################################################
+    print('     > Plot CO-Ops stations ..')
+    marker_cluster_coops = MarkerCluster(name='CO-OPS SSH observations')
+    marker_cluster_coops.add_to(m)    
+    
     if ssh_coops_stations:
-        print('     > Plot CO-Ops stations ..')
         # ssh Observations stations 
-        marker_cluster_coops = MarkerCluster(name='CO-OPs observations')
-        marker_cluster_coops.add_to(m)
         for ssh1, model1 in zip(ssh_observations, model_observations):
             fname = ssh1._metadata['station_code']
             location = ssh1._metadata['lat'], ssh1._metadata['lon']
@@ -1114,29 +1180,45 @@ for dir0 in dirs[:]:
             #p = make_plot(ssh1, ssh1)    
             marker = make_marker(p, location=location, fname=fname)
             marker.add_to(marker_cluster_coops)
-
+    else:
+        #plot obs only
+        for ssh1 in ssh:
+            fname = ssh1._metadata['station_code']
+            location = ssh1._metadata['lat'], ssh1._metadata['lon']
+            p = make_plot_obs(ssh1, label='SSH [m]')
+            #p = make_plot(ssh1, ssh1)    
+            marker = make_marker(p, location=location, fname=fname)
+            marker.add_to(marker_cluster_coops)
+    
     ################################################################
+    print('     > Plot CO-Ops wind stations ..')
+    marker_clusterw = MarkerCluster(name='CO-OPS wind observations')
+    marker_clusterw.add_to(m)
     if wind_coops_stations:
-        print('     > Plot CO-Ops wind stations ..')
         # Wind Observations stations.
-        #marker_clusterw = MarkerCluster(name='Wind observations')
-        #marker_clusterw.add_to(m)
         for ssh1, model1 in zip(wnd_observs,wnd_models):
             fname = ssh1._metadata['station_code']
             location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
             p = make_plot(ssh1, model1,'Wind [m/s]')
             #p = make_plot(ssh1, ssh1)    
             marker = make_marker(p, location=location, fname=fname, color = 'gray',icon='flag')
-            marker.add_to(marker_cluster_coops)
+            marker.add_to(marker_clusterw)
+    else: 
+        # Only Wind Observations.
+        for ssh1 in wnd_obs:
+            fname = ssh1._metadata['station_code']
+            location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
+            p = make_plot_obs(ssh1,'Wind [m/s]')
+            #p = make_plot(ssh1, ssh1)    
+            marker = make_marker(p, location=location, fname=fname, color = 'gray',icon='flag')
+            marker.add_to(marker_clusterw)
 
     #################################################################
-    if wave_ndbc_stations or wind_ndbc_stations:
-        marker_cluster_ndbc = MarkerCluster(name='NDBC observations')
-        marker_cluster_ndbc.add_to(m)
+    print('     > Plot NDBC wave stations ..')
+    marker_cluster_ndbc = MarkerCluster(name='NDBC wave observations')
+    marker_cluster_ndbc.add_to(m)
 
     if wave_ndbc_stations:
-        print('     > Plot NDBC wave stations ..')
-
         for ssh1, model1 in zip(wav_observs,wav_models):
             
             obs = ssh1['sea_surface_wave_significant_height (m)']
@@ -1148,11 +1230,24 @@ for dir0 in dirs[:]:
             #p = make_plot(ssh1, ssh1)    
             marker = make_marker(p, location=location, fname=fname, color = 'darkpurple',icon='record')
             marker.add_to(marker_cluster_ndbc)
+    else:
+        for ssh1 in wav_ocn:
+            obs = ssh1['sea_surface_wave_significant_height (m)']
+            obs._metadata = ssh1._metadata
+            
+            fname = ssh1._metadata['station_code']
+            location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
+            p = make_plot_obs(obs,'Hsig [m]')
+            #p = make_plot(ssh1, ssh1)    
+            marker = make_marker(p, location=location, fname=fname, color = 'darkpurple',icon='record')
+            marker.add_to(marker_cluster_ndbc)
+
+    print('     > Plot NDBC wind stations ..')
+    marker_cluster_ndbcw = MarkerCluster(name='NDBC wind observations')
+    marker_cluster_ndbcw.add_to(m)
 
     if wind_ndbc_stations:
-        print('     > Plot NDBC wind stations ..')
         for ssh1, model1 in zip(wnd_ocn_observs,wnd_ocn_models):
-            
             obs = ssh1['wind_speed (m/s)']
             obs._metadata = ssh1._metadata
             fname = ssh1._metadata['station_code']
@@ -1161,7 +1256,17 @@ for dir0 in dirs[:]:
             #p = make_plot(ssh1, ssh1)    
             marker = make_marker(p, location=location, fname=fname, color = 'orange',icon='flag')
             marker.add_to(marker_cluster_ndbc)
-
+    else:
+        for ssh1 in wnd_ocn:
+            obs = ssh1['wind_speed (m/s)']
+            obs._metadata = ssh1._metadata
+            fname = ssh1._metadata['station_code']
+            location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
+            p = make_plot_obs(obs,'Wind [m/s]')
+            #p = make_plot(ssh1, ssh1)    
+            marker = make_marker(p, location=location, fname=fname, color = 'orange',icon='flag')
+            marker.add_to(marker_cluster_ndbcw)
+    
     ###################        
     ## Plotting bounding box
     # folium.LayerControl().add_to(m)
@@ -1172,10 +1277,11 @@ for dir0 in dirs[:]:
 
     p.add_to(m)
     ##################################################### 
-    print('     > Plot NHC cone predictions')
 
+    track_radius = 5
     if plot_cones:
-        marker_cluster1 = MarkerCluster(name='Past predictions')
+        print('     > Plot NHC cone predictions')
+        marker_cluster1 = MarkerCluster(name='NHC cone predictions')
         marker_cluster1.add_to(m)
         def style_function_latest_cone(feature):
             return {
@@ -1196,7 +1302,7 @@ for dir0 in dirs[:]:
             }    
         
         
-        track_radius = 5
+
         
         if False:
             # Latest cone prediction.
