@@ -31,30 +31,15 @@ base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurr
 storms = defaultdict(dict)
 
 if True:
-    key  = 'IRMA'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2017'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = None
-    
-if False:
-
-    key  = 'SANDY'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2012'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = None
-
     key  = 'MARIA'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2017'
     storms[key]['start']   = None 
     storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = None
+    storms[key]['bbox' ]   = -86.20, 9.90, -56.50, 44.00
 
 
+if True:
     key  = 'MATTHEW'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2016'
@@ -62,16 +47,12 @@ if False:
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = None
 
-
     key  = 'ISAAC'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2012'
     storms[key]['start']   = None 
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = None
-
-
-
 
 
 if False:
@@ -102,7 +83,6 @@ if False:
     storms[key]['start']   = None 
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = None
-    
   
     key  = 'IRENE'
     storms[key]['name' ]   = key
@@ -111,9 +91,19 @@ if False:
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   =  -76.50, 12.90, -56.50, 47.30  
 
+    key  = 'IRMA'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2017'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
 
-
-
+    key  = 'SANDY'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2012'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = -82.50, 10.50, -65.50, 41.80
 
 
 #
