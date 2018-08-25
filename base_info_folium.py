@@ -22,14 +22,103 @@ import pandas    as pd
 import numpy as np
 import sys,os
 import datetime
-
+from   collections import defaultdict
 
 #base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
 base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot/'
 
+
+storms = defaultdict(dict)
+
+if True:
+    key  = 'IRMA'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2017'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+    
+if False:
+
+    key  = 'SANDY'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2012'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+    key  = 'MARIA'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2017'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+
+    key  = 'MATTHEW'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2016'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+
+    key  = 'ISAAC'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2012'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+
+
+
+
+if False:
+    key  = 'HARVEY'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2017'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = -99.70, 17.90, -88.10, 33.70
+
+    key  = 'IKE'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2008'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+    key  = 'ARTHUR'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2014'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = -82.0, 25.50, -63.50, 47.00
+
+    key  = 'HERMINE'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2016'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+    
+  
+    key  = 'IRENE'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2011'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   =  -76.50, 12.90, -56.50, 47.30  
+
+
+
+
+
+
 #
-year    = '2008'
-name    = 'IKE'
+#year    = '2008'
+#name    = 'IKE'
 
 #no GIS data
 #year    = '2003'
@@ -54,8 +143,11 @@ name    = 'IKE'
 #year = '2016'
 
 
+
+
 #name = 'ISAAC'
 #year = '2012'
+
 
 #name = 'HERMINE'
 #year = '2016'
