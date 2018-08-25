@@ -27,15 +27,9 @@ import datetime
 #base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
 base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot/'
 
-
-
-
-
-
-
 #
-#year    = '2008'
-#name    = 'IKE'
+year    = '2008'
+name    = 'IKE'
 
 #no GIS data
 #year    = '2003'
@@ -59,14 +53,15 @@ base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurr
 #name = 'MATTHEW'
 #year = '2016'
 
+
 #name = 'ISAAC'
 #year = '2012'
 
 #name = 'HERMINE'
 #year = '2016'
 
-name = 'ARTHUR'
-year = '2014'
+#name = 'ARTHUR'
+#year = '2014'
 
 
 

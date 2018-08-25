@@ -809,6 +809,22 @@ base = download_nhc_gis_files(hurricane_gis_files)
 # get advisory cones and track points
 cones,points,pts = read_advisory_cones_info(hurricane_gis_files,base,year,code)
 
+# Find the bounding box to search the data.
+bbox_from_track = True
+if bbox_from_track:
+    last_cone = cones[-1]['geometry'].iloc[0]
+    track = LineString([point['geometry'] for point in points])
+    track_lons = track.coords.xy[0]
+    track_lats = track.coords.xy[1]
+    bbox = min(track_lons)-2, min(track_lats)-2, max(track_lons)+2, max(track_lats)+2
+else:
+    bounds = np.array([last_cone.buffer(2).bounds, track.buffer(2).bounds]).reshape(4, 2)
+    lons, lats = bounds[:, 0], bounds[:, 1]
+    bbox = lons.min(), lats.min(), lons.max(), lats.max()
+
+# Note that the bounding box is derived from the track and the latest prediction cone.
+strbbox = ', '.join(format(v, '.2f') for v in bbox)
+
 #######################################
 print('\n\n\n\n\n\n********************************************************')
 print(            '*****  Storm name ',name, '      Year ',  year, '    *********')
@@ -874,32 +890,42 @@ for dir0 in dirs[:]:
         print ('Check for correct time stamp and adapt the code !')
         sys.exit('ERROR') 
     #####################################
-
+    print ( ' > bbox: {}\nstart: {}\n  end: {}'.format(strbbox, start, end))
     start_dt = start_dt  - obs_xtra_days
     end_dt   = end_dt    + obs_xtra_days
-
-    # Find the bounding box to search the data.
-
-    last_cone = cones[-1]['geometry'].iloc[0]
-    track = LineString([point['geometry'] for point in points])
-
-    bounds = np.array([last_cone.buffer(2).bounds, track.buffer(2).bounds]).reshape(4, 2)
-    lons, lats = bounds[:, 0], bounds[:, 1]
-    bbox = lons.min(), lats.min(), lons.max(), lats.max()
-
-    # Note that the bounding box is derived from the track and the latest prediction cone.
-    strbbox = ', '.join(format(v, '.2f') for v in bbox)
-    print ( ' > bbox: {}\nstart: {}\n  end: {}'.format(strbbox, start, end))
 
     ############################################################
     # read data
 
     print (' read from CSV files')
-    ssh_table,ssh          = read_csv (obs_dir, name, year, label='coops_ssh' )
-    wnd_obs_table,wnd_obs  = read_csv (obs_dir, name, year, label='coops_wind')
-    wnd_ocn_table,wnd_ocn  = read_csv (obs_dir, name, year, label='ndbc_wind' )
-    wav_ocn_table, wav_ocn = read_csv (obs_dir, name, year, label='ndbc_wave' )
+    try:
+        print ('   >  ssh from CSV files')
+        ssh_table,ssh          = read_csv (obs_dir, name, year, label='coops_ssh' )
+    except:
+        print ('   >  No ssh CSV files')            
 
+    try:
+        print ('   >  wind from CSV files')
+        wnd_obs_table,wnd_obs  = read_csv (obs_dir, name, year, label='coops_wind')
+    except:
+        print ('   >  No wind CSV files')  
+
+    try:
+        print ('   >  NDBC wind from CSV files')
+        wnd_ocn_table,wnd_ocn  = read_csv (obs_dir, name, year, label='ndbc_wind' )
+    except:
+        print ('   >  No ndbc wind CSV files')  
+
+    try:
+        print ('   >  NDBC wave from CSV files')
+        wav_ocn_table, wav_ocn = read_csv (obs_dir, name, year, label='ndbc_wave' )
+    except:
+        print ('   >  NDBC wave CSV files')  
+        
+
+
+
+    
 
     freq = '15min'
     freq = '30min'
@@ -1164,109 +1190,120 @@ for dir0 in dirs[:]:
             )
         m.add_child(color_scale)
     except:
-        print('WARNING: ADCIRC maxelev in not available!')
+        print('      > WARNING: ADCIRC maxelev in not available!')
     #
     #################################################################
-    print('     > Plot CO-Ops stations ..')
-    marker_cluster_coops = MarkerCluster(name='CO-OPS SSH observations')
-    marker_cluster_coops.add_to(m)    
-    
-    if ssh_coops_stations:
-        # ssh Observations stations 
-        for ssh1, model1 in zip(ssh_observations, model_observations):
-            fname = ssh1._metadata['station_code']
-            location = ssh1._metadata['lat'], ssh1._metadata['lon']
-            p = make_plot(ssh1, model1, label='SSH [m]',remove_mean_diff=remove_mean_diff, bbox_bias = bbox_bias)
-            #p = make_plot(ssh1, ssh1)    
-            marker = make_marker(p, location=location, fname=fname)
-            marker.add_to(marker_cluster_coops)
-    else:
-        #plot obs only
-        for ssh1 in ssh:
-            fname = ssh1._metadata['station_code']
-            location = ssh1._metadata['lat'], ssh1._metadata['lon']
-            p = make_plot_obs(ssh1, label='SSH [m]')
-            #p = make_plot(ssh1, ssh1)    
-            marker = make_marker(p, location=location, fname=fname)
-            marker.add_to(marker_cluster_coops)
-    
+    try:
+        print('     > Plot COOPS SSH stations ..')
+        marker_cluster_coops = MarkerCluster(name='CO-OPS SSH observations')
+        marker_cluster_coops.add_to(m)    
+        
+        if ssh_coops_stations:
+            # ssh Observations stations 
+            for ssh1, model1 in zip(ssh_observations, model_observations):
+                fname = ssh1._metadata['station_code']
+                location = ssh1._metadata['lat'], ssh1._metadata['lon']
+                p = make_plot(ssh1, model1, label='SSH [m]',remove_mean_diff=remove_mean_diff, bbox_bias = bbox_bias)
+                #p = make_plot(ssh1, ssh1)    
+                marker = make_marker(p, location=location, fname=fname)
+                marker.add_to(marker_cluster_coops)
+        else:
+            #plot obs only
+            for ssh1 in ssh:
+                fname = ssh1._metadata['station_code']
+                location = ssh1._metadata['lat'], ssh1._metadata['lon']
+                p = make_plot_obs(ssh1, label='SSH [m]')
+                #p = make_plot(ssh1, ssh1)    
+                marker = make_marker(p, location=location, fname=fname)
+                marker.add_to(marker_cluster_coops)
+    except:
+        print('      > WARNING: COOPS SSH OBS in not available!')
+      
     ################################################################
-    print('     > Plot CO-Ops wind stations ..')
-    marker_clusterw = MarkerCluster(name='CO-OPS wind observations')
-    marker_clusterw.add_to(m)
-    if wind_coops_stations:
-        # Wind Observations stations.
-        for ssh1, model1 in zip(wnd_observs,wnd_models):
-            fname = ssh1._metadata['station_code']
-            location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
-            p = make_plot(ssh1, model1,'Wind [m/s]')
-            #p = make_plot(ssh1, ssh1)    
-            marker = make_marker(p, location=location, fname=fname, color = 'gray',icon='flag')
-            marker.add_to(marker_clusterw)
-    else: 
-        # Only Wind Observations.
-        for ssh1 in wnd_obs:
-            fname = ssh1._metadata['station_code']
-            location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
-            p = make_plot_obs(ssh1,'Wind [m/s]')
-            #p = make_plot(ssh1, ssh1)    
-            marker = make_marker(p, location=location, fname=fname, color = 'gray',icon='flag')
-            marker.add_to(marker_clusterw)
+    try:
+        print('     > Plot CO-Ops wind stations ..')
+        marker_clusterw = MarkerCluster(name='CO-OPS wind observations')
+        marker_clusterw.add_to(m)
+        if wind_coops_stations:
+            # Wind Observations stations.
+            for ssh1, model1 in zip(wnd_observs,wnd_models):
+                fname = ssh1._metadata['station_code']
+                location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
+                p = make_plot(ssh1, model1,'Wind [m/s]')
+                #p = make_plot(ssh1, ssh1)    
+                marker = make_marker(p, location=location, fname=fname, color = 'gray',icon='flag')
+                marker.add_to(marker_clusterw)
+        else: 
+            # Only Wind Observations.
+            for ssh1 in wnd_obs:
+                fname = ssh1._metadata['station_code']
+                location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
+                p = make_plot_obs(ssh1,'Wind [m/s]')
+                #p = make_plot(ssh1, ssh1)    
+                marker = make_marker(p, location=location, fname=fname, color = 'gray',icon='flag')
+                marker.add_to(marker_clusterw)
+    except:
+        print('      > WARNING: COOPS wind OBS in not available!')
 
     #################################################################
-    print('     > Plot NDBC wave stations ..')
-    marker_cluster_ndbc = MarkerCluster(name='NDBC wave observations')
-    marker_cluster_ndbc.add_to(m)
+    try:
+        print('     > Plot NDBC wave stations ..')
+        marker_cluster_ndbc = MarkerCluster(name='NDBC wave observations')
+        marker_cluster_ndbc.add_to(m)
 
-    if wave_ndbc_stations:
-        for ssh1, model1 in zip(wav_observs,wav_models):
-            
-            obs = ssh1['sea_surface_wave_significant_height (m)']
-            obs._metadata = ssh1._metadata
-            
-            fname = ssh1._metadata['station_code']
-            location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
-            p = make_plot(obs, model1,'Hsig [m]')
-            #p = make_plot(ssh1, ssh1)    
-            marker = make_marker(p, location=location, fname=fname, color = 'darkpurple',icon='record')
-            marker.add_to(marker_cluster_ndbc)
-    else:
-        for ssh1 in wav_ocn:
-            obs = ssh1['sea_surface_wave_significant_height (m)']
-            obs._metadata = ssh1._metadata
-            
-            fname = ssh1._metadata['station_code']
-            location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
-            p = make_plot_obs(obs,'Hsig [m]')
-            #p = make_plot(ssh1, ssh1)    
-            marker = make_marker(p, location=location, fname=fname, color = 'darkpurple',icon='record')
-            marker.add_to(marker_cluster_ndbc)
+        if wave_ndbc_stations:
+            for ssh1, model1 in zip(wav_observs,wav_models):
+                
+                obs = ssh1['sea_surface_wave_significant_height (m)']
+                obs._metadata = ssh1._metadata
+                
+                fname = ssh1._metadata['station_code']
+                location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
+                p = make_plot(obs, model1,'Hsig [m]')
+                #p = make_plot(ssh1, ssh1)    
+                marker = make_marker(p, location=location, fname=fname, color = 'darkpurple',icon='record')
+                marker.add_to(marker_cluster_ndbc)
+        else:
+            for ssh1 in wav_ocn:
+                obs = ssh1['sea_surface_wave_significant_height (m)']
+                obs._metadata = ssh1._metadata
+                
+                fname = ssh1._metadata['station_code']
+                location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
+                p = make_plot_obs(obs,'Hsig [m]')
+                #p = make_plot(ssh1, ssh1)    
+                marker = make_marker(p, location=location, fname=fname, color = 'darkpurple',icon='record')
+                marker.add_to(marker_cluster_ndbc)
+    except:
+        print('      > WARNING: NDBS wave OBS in not available!')
+    ########################################################################
+    try:
+        print('     > Plot NDBC wind stations ..')
+        marker_cluster_ndbcw = MarkerCluster(name='NDBC wind observations')
+        marker_cluster_ndbcw.add_to(m)
 
-    print('     > Plot NDBC wind stations ..')
-    marker_cluster_ndbcw = MarkerCluster(name='NDBC wind observations')
-    marker_cluster_ndbcw.add_to(m)
-
-    if wind_ndbc_stations:
-        for ssh1, model1 in zip(wnd_ocn_observs,wnd_ocn_models):
-            obs = ssh1['wind_speed (m/s)']
-            obs._metadata = ssh1._metadata
-            fname = ssh1._metadata['station_code']
-            location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
-            p = make_plot(obs, model1,'Wind [m/s]')
-            #p = make_plot(ssh1, ssh1)    
-            marker = make_marker(p, location=location, fname=fname, color = 'orange',icon='flag')
-            marker.add_to(marker_cluster_ndbc)
-    else:
-        for ssh1 in wnd_ocn:
-            obs = ssh1['wind_speed (m/s)']
-            obs._metadata = ssh1._metadata
-            fname = ssh1._metadata['station_code']
-            location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
-            p = make_plot_obs(obs,'Wind [m/s]')
-            #p = make_plot(ssh1, ssh1)    
-            marker = make_marker(p, location=location, fname=fname, color = 'orange',icon='flag')
-            marker.add_to(marker_cluster_ndbcw)
-    
+        if wind_ndbc_stations:
+            for ssh1, model1 in zip(wnd_ocn_observs,wnd_ocn_models):
+                obs = ssh1['wind_speed (m/s)']
+                obs._metadata = ssh1._metadata
+                fname = ssh1._metadata['station_code']
+                location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
+                p = make_plot(obs, model1,'Wind [m/s]')
+                #p = make_plot(ssh1, ssh1)    
+                marker = make_marker(p, location=location, fname=fname, color = 'orange',icon='flag')
+                marker.add_to(marker_cluster_ndbc)
+        else:
+            for ssh1 in wnd_ocn:
+                obs = ssh1['wind_speed (m/s)']
+                obs._metadata = ssh1._metadata
+                fname = ssh1._metadata['station_code']
+                location = ssh1._metadata['lat'] , ssh1._metadata['lon'] 
+                p = make_plot_obs(obs,'Wind [m/s]')
+                #p = make_plot(ssh1, ssh1)    
+                marker = make_marker(p, location=location, fname=fname, color = 'orange',icon='flag')
+                marker.add_to(marker_cluster_ndbcw)
+    except:
+        print('      > WARNING: NDBS wind OBS in not available!')        
     ###################        
     ## Plotting bounding box
     # folium.LayerControl().add_to(m)
@@ -1437,7 +1474,7 @@ for dir0 in dirs[:]:
 
 
     print ('     > Save file ...')
-    fname = '{}_{}_{}_storm.html'.format(name.split()[-1].lower(),forcing,key0)
+    fname = 'z_{}_{}_{}_storm.html'.format(name.split()[-1].lower(),forcing,key0)
     m.save(fname)
 
 

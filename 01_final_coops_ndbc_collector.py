@@ -37,6 +37,8 @@ from ioos_tools.ioos import collector2table
 import pickle 
 #
 import geopandas as gpd
+
+from shapely.geometry import LineString
 #####################################################
 try:
     os.system('rm __pycache__/hurricane_funcs*'  )
@@ -77,37 +79,61 @@ if False:
 #
 #######
 
-if int (year) > 2008:
+
+bbox_from_best_track = False
+code,hurricane_gis_files = get_nhc_storm_info (year,name)
+if bbox_from_best_track:
+    ################################################################################
     #for storms after 2010 works
-    code,hurricane_gis_files = get_nhc_storm_info (year,name)
     base                     = download_nhc_gis_best_track(year,code)
-    line,points,radii = read_gis_best_track(base,code)
+    line_best,points_best,radii = read_gis_best_track(base,code)
     download_nhc_best_track(year,code)
     #
-    start_txt = str (np.array( points.DTG)[ 0])
-    end_txt   = str (np.array( points.DTG)[-1])
+    start_txt_best = str (np.array( points_best.DTG)[ 0])
+    end_txt_best   = str (np.array( points_best.DTG)[-1])
+
+    # get bbox from best track
+    bounds = np.array(points_best.buffer(2).bounds)
+    lons_best   = np.r_[bounds[:,0],bounds[:,2]]
+    lats_best   = np.r_[bounds[:,1],bounds[:,3]]
+    bbox_best = lons_best.min(), lats_best.min(), lons_best.max(), lats_best.max()    
+    ################################################################################
 else:
-    #for IKE
-    #read file info
-    code,hurricane_gis_files = get_nhc_storm_info (year,name)
-    #donload gis zip files
+    #download gis zip files
     base = download_nhc_gis_files(hurricane_gis_files)
     # get advisory cones and track points
-    cones,po,points = read_advisory_cones_info(hurricane_gis_files,base,year,code)
-    start    = po[0] ['ADVDATE']
-    end      = po[-1]['ADVDATE']
-    
-    start_txt = ('20' + start[:-2]).replace('/','')
-    end_txt   = ('20' + end  [:-2]).replace('/','')
+    cones,pts_actual,points_actual = read_advisory_cones_info(hurricane_gis_files,base,year,code)
+    start    = pts_actual[0] ['ADVDATE']
+    end      = pts_actual[-1]['ADVDATE']
+    start_txt_actual = ('20' + start[:-2]).replace('/','')
+    end_txt_actual   = ('20' + end  [:-2]).replace('/','')
 
-    print('\n\n\n\n  >>>>> Download and read all GIS data for Storm >',name, '      Year > ', year, '\n     **  This is an old STORM !!!!!! \n\n\n\n')
+    # get bbox from actual data
+    last_cone = cones[-1]['geometry'].iloc[0]
+    track = LineString([point['geometry'] for point in pts_actual])
+    lons_actual = track.coords.xy[0]
+    lats_actual = track.coords.xy[1]
+    bbox_actual = min(lons_actual)-2, min(lats_actual)-2, max(lons_actual)+2, max(lats_actual)+2
+    ################################################################################
+
+# Find the bounding box to search the data.
+bbox_from_best_track = False
+if bbox_from_best_track:
+    start_txt = start_txt_best
+    end_txt   = end_txt_best
+    bbox      = bbox_best
+else:
+    start_txt = start_txt_actual
+    end_txt   = end_txt_actual
+    bbox      = bbox_actual
+
+
+#print('\n\n\n\n  >>>>> Download and read all GIS data for Storm >',name, '      Year > ', year, '\n     **  This is an old STORM !!!!!! \n\n\n\n')
 
 #
-bounds = np.array(points.buffer(2).bounds)
-lons   = np.r_[bounds[:,0],bounds[:,2]]
-lats   = np.r_[bounds[:,1],bounds[:,3]]
-#
-bbox = lons.min(), lats.min(), lons.max(), lats.max()
+# Note that the bounding box is derived from the track and the latest prediction cone.
+strbbox = ', '.join(format(v, '.2f') for v in bbox)
+
 #
 start_dt = arrow.get(start_txt, 'YYYYMMDDhh').datetime - obs_xtra_days
 end_dt   = arrow.get(end_txt  , 'YYYYMMDDhh').datetime + obs_xtra_days
