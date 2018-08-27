@@ -22,29 +22,148 @@ import pandas    as pd
 import numpy as np
 import sys,os
 import datetime
+from   collections import defaultdict
+
+#base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
+base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot/'
 
 
+storms = defaultdict(dict)
+
+if True:
+    key  = 'IRENE'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2011'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   =  -76.50, 12.90, -56.50, 47.30  
+
+    key  = 'MARIA'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2017'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = -82.50,9.90, -56.50, 44.00
+    
+    
+
+if False:
+
+
+    key  = 'MATTHEW'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2016'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+    key  = 'ISAAC'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2012'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+    key  = 'HARVEY'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2017'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = -99.70, 17.90, -88.10, 33.70
+
+    key  = 'IKE'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2008'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+    key  = 'ARTHUR'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2014'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = -82.0, 25.50, -63.50, 47.00
+
+    key  = 'HERMINE'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2016'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+    key  = 'IRMA'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2017'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+    key  = 'SANDY'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2012'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = -82.50, 10.50, -65.50, 41.80
+
+
+#
+#year    = '2008'
+#name    = 'IKE'
+
+#no GIS data
+#year    = '2003'
+#name    = 'ISABEL'
+
+<<<<<<< HEAD
 base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
 #base_dir = '/data01/data01/01-projects/07-NOAA-CoastalAct/04-working/02-hurricane/hurrican_web_plot/'
 
 #name = 'IRENE'
 #year = '2011'
+=======
+#year    = '2017'
+#name    = 'IRMA'
+>>>>>>> 412587def53030109142f5bc426f5fbda3f6a066
 
 #name = 'SANDY'
 #year = '2012'
 
+#name = 'IRENE'
+#year = '2011'
 
+#name = 'HARVEY'
+#year = '2017'
+
+#name = 'MARIA'
+#year = '2017'
+
+#name = 'MATTHEW'
+#year = '2016'
+
+
+
+
+#name = 'ISAAC'
+#year = '2012'
+
+
+#name = 'HERMINE'
+#year = '2016'
+
+#name = 'ARTHUR'
+#year = '2014'
+
+<<<<<<< HEAD
 year    = '2017'
 name    = 'IRMA'
-
-#year    = '2016'
-#name    = 'MATTHEW'
-
-#year    = '2008'
-#name    = 'IKE'
+=======
+>>>>>>> 412587def53030109142f5bc426f5fbda3f6a066
 
 
-plot_cones = True
+
+
+plot_cones = False
 plot_sat   = False
 
 obs_xtra_days = datetime.timedelta(2)
