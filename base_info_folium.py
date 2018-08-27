@@ -27,15 +27,15 @@ import datetime
 base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
 #base_dir = '/data01/data01/01-projects/07-NOAA-CoastalAct/04-working/02-hurricane/hurrican_web_plot/'
 
-name = 'IRENE'
-year = '2011'
+#name = 'IRENE'
+#year = '2011'
 
 #name = 'SANDY'
 #year = '2012'
 
 
-#year    = '2017'
-#name    = 'IRMA'
+year    = '2017'
+name    = 'IRMA'
 
 #year    = '2016'
 #name    = 'MATTHEW'

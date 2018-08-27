@@ -1272,6 +1272,10 @@ for dir0 in dirs[:]:
         lon_hwm = df.lon.values
         lat_hwm = df.lat.values
         hwm     = df.elev_msl_m.values
+
+        if 'HWM_ID' not in df.columns:
+            df['HWM_ID'] = 'Not available'
+
         #
         #marker_cluster_hwm = MarkerCluster(name='High Water Marks')
         #marker_cluster_hwm.add_to(m)
@@ -1286,6 +1290,8 @@ for dir0 in dirs[:]:
 
             words = ' '.join(df['Description'][im].split()[:3])
             popup = 'HWM_ID: {}<br>{}<br>Elev: {} [m, MSL]'.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
+            
+            
             #popup = popup[:50]
 
             

@@ -45,13 +45,13 @@ if 'hurricane_funcs' in sys.modules:
 from hurricane_funcs import *
 ####################################################
 try:
-    os.system('rm __pycache__/base_info*.pyc'  )
-    os.system('rm base_info*.pyc'  )
+    os.system('rm __pycache__/base_info_folium*.pyc'  )
+    os.system('rm base_info_folium*.pyc'  )
 except:
     pass
-if 'base_info' in sys.modules:  
-    del(sys.modules["base_info"])
-from base_info import *
+if 'base_info_folium' in sys.modules:  
+    del(sys.modules["base_info_folium"])
+from base_info_folium import *
 ####################################################
 #
 import arrow
