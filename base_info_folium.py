@@ -31,23 +31,33 @@ base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurr
 storms = defaultdict(dict)
 
 if True:
+#if False:
+    key  = 'IKE'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2008'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+    
+    
+
+#if True:
+#if False:
+
     key  = 'IRENE'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2011'
     storms[key]['start']   = None 
     storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   =  -76.50, 12.90, -56.50, 47.30  
+    storms[key]['bbox' ]   =  -82.50, 12.90, -56.50, 47.30  
 
+#if False:    
     key  = 'MARIA'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2017'
     storms[key]['start']   = None 
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = -82.50,9.90, -56.50, 44.00
-    
-    
-
-if False:
 
 
     key  = 'MATTHEW'
@@ -71,12 +81,6 @@ if False:
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = -99.70, 17.90, -88.10, 33.70
 
-    key  = 'IKE'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2008'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = None
 
     key  = 'ARTHUR'
     storms[key]['name' ]   = key
@@ -115,16 +119,14 @@ if False:
 #year    = '2003'
 #name    = 'ISABEL'
 
-<<<<<<< HEAD
+
 base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
 #base_dir = '/data01/data01/01-projects/07-NOAA-CoastalAct/04-working/02-hurricane/hurrican_web_plot/'
 
 #name = 'IRENE'
 #year = '2011'
-=======
 #year    = '2017'
 #name    = 'IRMA'
->>>>>>> 412587def53030109142f5bc426f5fbda3f6a066
 
 #name = 'SANDY'
 #year = '2012'
@@ -154,11 +156,11 @@ base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
 #name = 'ARTHUR'
 #year = '2014'
 
-<<<<<<< HEAD
-year    = '2017'
-name    = 'IRMA'
-=======
->>>>>>> 412587def53030109142f5bc426f5fbda3f6a066
+
+#year    = '2017'
+#name    = 'IRMA'
+
+
 
 
 
@@ -166,7 +168,7 @@ name    = 'IRMA'
 plot_cones = False
 plot_sat   = False
 
-obs_xtra_days = datetime.timedelta(2)
+obs_xtra_days = datetime.timedelta(4)
 
 
 remove_mean_diff = False

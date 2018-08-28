@@ -1,1 +1,1 @@
-../../test_utils/utils/python/02-post/plot_adc/base_info_irm.py
+../../01_post_clone_theia/test_utils/utils/python/02-post/plot_adc/base_info_ike.py

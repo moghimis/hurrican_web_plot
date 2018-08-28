@@ -748,10 +748,10 @@ def get_bias(bias_bbox,ssh,ssh_table,fort61 ):
     # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
     common  = set(ssh_bias_table['station_code']).intersection(mod_table  ['station_code'].values)
 
-    ssh_obs, mod_obs = [], []
+    ssh_obs, ssh_mod = [], []
     for station in common:
         ssh_obs.extend([obs for obs in ssh   if obs._metadata['station_code'] == station])
-        mod_obs.extend([obm for obm in mod   if obm._metadata                 == station])
+        ssh_mod.extend([obm for obm in mod   if obm._metadata                 == station])
 
 
     index = pd.date_range(
@@ -774,14 +774,14 @@ def get_bias(bias_bbox,ssh,ssh_table,fort61 ):
 
     ##############################################################
     #model
-    model_observations = []
+    ssh_from_model = []
     mod_all = []
-    for series in mod_obs:
+    for series in ssh_mod:
         _metadata = series._metadata
         obs = series.reindex(index=index, limit=1, method='nearest')
         obs._metadata = _metadata
         obs.name = _metadata
-        model_observations.append(obs)
+        ssh_from_model.append(obs)
         mod_all.append( obs['ssh'].values)
 
 
@@ -796,7 +796,7 @@ def get_bias(bias_bbox,ssh,ssh_table,fort61 ):
 ####       MAIN CODE from HERE     #####
 ########################################
 
-for key in np.sort(storms.keys()):
+for key in storms.keys():
     name = storms[key]['name']
     year = storms[key]['year']
 
@@ -808,7 +808,7 @@ for key in np.sort(storms.keys()):
     wnd_ocn_observs = wnd_ocn_models = wnd_ocn = None
     wav_ocn = wav_observs = wav_models = None
     wnd_obs = wnd_observs = wnd_models = None
-    ssh = ssh_observations = model_observations = None
+    ssh = ssh_observations = ssh_from_model = None
 
 
     prefix  = name[:3]
@@ -940,11 +940,6 @@ for key in np.sort(storms.keys()):
             wav_ocn_table, wav_ocn = read_csv (obs_dir, name, year, label='ndbc_wave' )
         except:
             print ('   >  NDBC wave CSV files')  
-            
-
-
-
-        
 
         freq = '15min'
         freq = '30min'
@@ -960,10 +955,10 @@ for key in np.sort(storms.keys()):
             # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
             common  = set(ssh_table['station_code']).intersection(mod_table  ['station_code'].values)
 
-            ssh_obs, mod_obs = [], []
+            ssh_obs, ssh_mod = [], []
             for station in common:
                 ssh_obs.extend([obs for obs in ssh   if obs._metadata['station_code'] == station])
-                mod_obs.extend([obm for obm in mod   if obm._metadata                 == station])
+                ssh_mod.extend([obm for obm in mod   if obm._metadata                 == station])
 
 
             index = pd.date_range(
@@ -984,15 +979,15 @@ for key in np.sort(storms.keys()):
 
             ##############################################################
             #model
-            model_observations = []
-            for series in mod_obs:
+            ssh_from_model = []
+            for series in ssh_mod:
                 _metadata = series._metadata
                 obs = series.reindex(index=index, limit=1, method='nearest')
                 obs._metadata = _metadata
                 obs.name = _metadata
                 obs['ssh'][np.abs(obs['ssh']) > 10] = np.nan
                 obs.dropna(inplace=True)
-                model_observations.append(obs)
+                ssh_from_model.append(obs)
         
             
             if apply_bbox_bias:
@@ -1213,20 +1208,20 @@ for key in np.sort(storms.keys()):
         #
         #################################################################
         try:
-            print('     > Plot COOPS SSH stations ..')
+            print('     > Plot CO-OPS SSH stations ..')
             marker_cluster_coops = MarkerCluster(name='CO-OPS SSH observations')
             marker_cluster_coops.add_to(m)    
             
             if ssh_coops_stations:
                 # ssh Observations stations 
-                for ssh1, model1 in zip(ssh_observations, model_observations):
+                for ssh1, model1 in zip(ssh_observations, ssh_from_model):
                     fname = ssh1._metadata['station_code']
                     location = ssh1._metadata['lat'], ssh1._metadata['lon']
                     p = make_plot(ssh1, model1, label='SSH [m]',remove_mean_diff=remove_mean_diff, bbox_bias = bbox_bias)
                     #p = make_plot(ssh1, ssh1)    
                     marker = make_marker(p, location=location, fname=fname)
                     marker.add_to(marker_cluster_coops)
-                    #del ssh_observations, model_observations
+                    #del ssh_observations, ssh_from_model
             else:
                 #plot obs only
                 for ssh1 in ssh:
@@ -1239,11 +1234,11 @@ for key in np.sort(storms.keys()):
                     #
                     #del ssh
         except:
-            print('      > WARNING: COOPS SSH OBS in not available!')
+            print('      > WARNING: CO-OPS SSH OBS in not available!')
           
         ################################################################
         try:
-            print('     > Plot CO-Ops wind stations ..')
+            print('     > Plot CO-OPS wind stations ..')
             marker_clusterw = MarkerCluster(name='CO-OPS wind observations')
             marker_clusterw.add_to(m)
             if wind_coops_stations:
@@ -1630,6 +1625,6 @@ if False:
 #wnd_ocn_observs,wnd_ocn_models,wnd_ocn
 #wav_ocn,wav_observs,wav_models
 #wnd_obs,wnd_observs,wnd_models
-#ssh,ssh_observations, model_observations
+#ssh,ssh_observations, ssh_from_model
 
 
