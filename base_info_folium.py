@@ -24,26 +24,24 @@ import sys,os
 import datetime
 from   collections import defaultdict
 
-#base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
-base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot/'
+base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/wrk_dir/'
+#base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot/'
 
 
 storms = defaultdict(dict)
 
-if True:
-#if False:
-    key  = 'IKE'
+#if True:
+if False:
+
+    
+    key  = 'IRMA'
     storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2008'
+    storms[key]['year' ]   = '2017'
     storms[key]['start']   = None 
     storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = None
-    
-    
+    storms[key]['bbox' ]   = None    
 
-#if True:
-#if False:
-
+if False:
     key  = 'IRENE'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2011'
@@ -51,7 +49,29 @@ if True:
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   =  -82.50, 12.90, -56.50, 47.30  
 
-#if False:    
+if True:    
+    key  = 'IKE'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2008'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+    key  = 'SANDY'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2012'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = -82.50, 10.50, -65.50, 41.80
+
+
+
+#if True:
+if False:
+
+
+
+
     key  = 'MARIA'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2017'
@@ -103,12 +123,7 @@ if True:
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = None
 
-    key  = 'SANDY'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2012'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = -82.50, 10.50, -65.50, 41.80
+
 
 
 #
@@ -171,9 +186,9 @@ plot_sat   = False
 obs_xtra_days = datetime.timedelta(4)
 
 
-remove_mean_diff = False
+remove_mean_diff = True
 
-apply_bbox_bias = True
+apply_bbox_bias = False
 #San_area2
 bias_bbox = [  -75.9 ,  38.5 ,  -73.3 , 41.3 ]
 bias_calc_start =  datetime.datetime(2012, 10, 22, 11, 0)

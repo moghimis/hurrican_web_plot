@@ -75,6 +75,11 @@ def model_on_data(data_dates, model_dates, model_val):
 #name  = 'IRENE'
 #year  = '2011'
 
+include_wav_dir = False
+
+
+
+print ('\n\n\n\n > Storm > ', base_info.storm_name ,' < \n\n\n')
 print (' > Read Obs stas ...')
 sta_info_dir = '/scratch4/COASTAL/coastal/save/Saeed.Moghimi/models/NEMS/NEMS_inps/01_data/coops_ndbc_data/' 
 ndbc_wave_sta_file = os.path.join(sta_info_dir,name+year,'ndbc_wave','table.csv')
@@ -226,74 +231,81 @@ for key in base_info.cases.keys():
     
     wave_inp = glob.glob(base_info.cases[key]['dir'] +'/inp_wavdata/*')
     if len(wave_inp) > 0:
-        print (' > Wave results ...')
-        hsig_inp = base_info.cases[key]['hsig_file']
-        wdir_inp = base_info.cases[key]['wdir_file']
-        ###
-        nch  = n4.Dataset(hsig_inp,'r')
-        ncvh = nch.variables 
-        lonh = ncvh['longitude'][:]
-        lath = ncvh['latitude' ][:]
-        hsig = ncvh['hs'][:]
-        
-        wave_dates = n4.num2date(ncvh['time'][:],units=ncvh['time'].units)
+          print (' > Wave results ...')
+          hsig_inp = base_info.cases[key]['hsig_file']
+          wdir_inp = base_info.cases[key]['wdir_file']
+          ###
+          nch  = n4.Dataset(hsig_inp,'r')
+          ncvh = nch.variables 
+          lonh = ncvh['longitude'][:]
+          lath = ncvh['latitude' ][:]
+          hsig = ncvh['hs'][:]
+          
+          wave_dates = n4.num2date(ncvh['time'][:],units=ncvh['time'].units)
 
-        #
-        ncd  = n4.Dataset(wdir_inp,'r')
-        ncvd = ncd.variables 
-        wdir = ncvd['dir'][:]
-        ncd.close()
-        #
-        
-        lons = wave_sta.lon
-        lats = wave_sta.lat
-        sat_lab = wave_sta['station_code'][:]
-        hsigs = np.zeros ((len(wave_dates),nloc_wave))
-        wdirs = np.zeros_like(hsigs)
-        
-        for ip in range(len(lons)):
-            [i],prox = find_nearest1d(xvec = lonh,yvec = lath, xp = lons[ip],yp = lats[ip])
-            hsigs[:,ip] = hsig[:,i]   
-            wdirs[:,ip] = wdir[:,i]  
-        
-        wind_out_fname = base_info.cases[key]['dir'] + '/01_wave_on_ndbc_obs.nc'
-        nc = n4.Dataset(wind_out_fname,'w')
-         
-        nc.Description = 'Wave model for obs locations'
-        nc.Author = 'moghimis@gmail.com'
-        nc.Created = datetime.datetime.now().isoformat()
-         
-        # DIMENSIONS #
-        nc.createDimension('time', None)
-        nc.createDimension('station'   , nloc_wave)
-        nc.createDimension('namelen'   ,  50 )
+          #
+          if include_wav_dir:
+              ncd  = n4.Dataset(wdir_inp,'r')
+              ncvd = ncd.variables 
+              wdir = ncvd['dir'][:]
+              ncd.close()
+          #
+          
+          lons = wave_sta.lon
+          lats = wave_sta.lat
+          sat_lab = wave_sta['station_code'][:]
+          hsigs = np.zeros ((len(wave_dates),nloc_wave))
+          wdirs = np.zeros_like(hsigs)
+          
+          for ip in range(len(lons)):
+              [i],prox = find_nearest1d(xvec = lonh,yvec = lath, xp = lons[ip],yp = lats[ip])
+              hsigs[:,ip] = hsig[:,i]   
+              if include_wav_dir:
+                  wdirs[:,ip] = wdir[:,i]  
+      
+          wind_out_fname = base_info.cases[key]['dir'] + '/01_wave_on_ndbc_obs.nc'
+          nc = n4.Dataset(wind_out_fname,'w')
+           
+          nc.Description = 'Wave model for obs locations'
+          nc.Author = 'moghimis@gmail.com'
+          nc.Created = datetime.datetime.now().isoformat()
+           
+          # DIMENSIONS #
+          nc.createDimension('time', None)
+          nc.createDimension('station'   , nloc_wave)
+          nc.createDimension('namelen'   ,  50 )
 
-        name1       = nc.createVariable(varname = 'station_name', datatype='S1', dimensions=('station','namelen',))
-        for ista in range(len(sat_lab)):
-            label =  sat_lab[ista]
-            #print (label)
-            for ich in range(len(label)):
-                name1[ista,ich]    = label[ich]
+          name1       = nc.createVariable(varname = 'station_name', datatype='S1', dimensions=('station','namelen',))
+          for ista in range(len(sat_lab)):
+              label =  str(int(sat_lab[ista]))
+              #print (label)
+              for ich in range(len(label)):
+                  name1[ista,ich]    = label[ich]
 
-        
-        lon1       = nc.createVariable(varname = 'lon', datatype='f8', dimensions=('station',))
-        lon1[:]    =   lons.values [:]
+          
+          lon1       = nc.createVariable(varname = 'lon', datatype='f8', dimensions=('station',))
+          lon1[:]    =   lons.values [:]
 
-        lat1       = nc.createVariable(varname = 'lat', datatype='f8', dimensions=('station',))
-        lat1[:]    = lats.values [:]
+          lat1       = nc.createVariable(varname = 'lat', datatype='f8', dimensions=('station',))
+          lat1[:]    = lats.values [:]
 
-        time1       = nc.createVariable(varname = 'time', datatype='f8', dimensions=('time',))
-        time1.units = ncvh['time'].units
-        time1[:]    = ncvh['time'][:]  
+          time1       = nc.createVariable(varname = 'time', datatype='f8', dimensions=('time',))
+          time1.units = ncvh['time'].units
+          time1[:]    = ncvh['time'][:]  
+    
+          uwind1 =  nc.createVariable(varname = 'hsig', datatype='f8', dimensions=('time','station',))
+          uwind1[:,:] = hsigs[:,:]
   
-        uwind1 =  nc.createVariable(varname = 'hsig', datatype='f8', dimensions=('time','station',))
-        vwind1 =  nc.createVariable(varname = 'wdir', datatype='f8', dimensions=('time','station',))
+          if include_wav_dir:
+              vwind1 =  nc.createVariable(varname = 'wdir', datatype='f8', dimensions=('time','station',))
+              vwind1[:,:] = wdirs[:,:]
+          
+          nc.close()
+          nch.close()
+        #except:
+        #    print ('>>> Some thing wrong with Wave model. We skip it fpr now ..')   
+        #    pass
         
-        uwind1[:,:] = hsigs[:,:]
-        vwind1[:,:] = wdirs[:,:]
-        
-        nc.close()
-        nch.close()
 
     
     print ('>>> Prepare max surge ..')
@@ -329,6 +341,7 @@ for key in np.sort(base_info.cases.keys()):
     subdir = key +'.'+ base_info.cases[key]['label'] +'.'+ base_info.cases[key]['dir'].split('/')[-2] + '/'
     print (subdir)
     out_dir_case = out_dir + subdir
+    out_dir_case = out_dir_case.replace(' ','_')
     os.system('mkdir -p ' +  out_dir_case)
     
     

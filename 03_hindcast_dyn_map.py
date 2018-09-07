@@ -207,10 +207,6 @@ def make_plot_2axes(ssh, wind):
 
 
 
-
-
-
-
 def make_plot_obs(obs,label=None):    
     #TOOLS="hover,crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,undo,redo,reset,tap,save,box_select,poly_select,lasso_select,"
     TOOLS="crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,reset,save,"
@@ -265,7 +261,7 @@ def make_plot_obs(obs,label=None):
 
 
 #def make_plot(obs, model = None,label,remove_mean_diff=False,bbox_bias=None):
-def make_plot(obs, model = None,label=None,remove_mean_diff=False,bbox_bias=None):    
+def make_plot(obs, model = None,label=None,remove_mean_diff=False,bbox_bias=0.0):    
     #TOOLS="hover,crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,undo,redo,reset,tap,save,box_select,poly_select,lasso_select,"
     TOOLS="crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,reset,save,"
     
@@ -295,13 +291,14 @@ def make_plot(obs, model = None,label=None,remove_mean_diff=False,bbox_bias=None
     
 
     if model is not None:
+        mod_val = model.values.squeeze()
+        
         if ('SSH' in label) and remove_mean_diff:
             mod_val = mod_val + obs_val.mean() - mod_val.mean()
 
         if ('SSH' in label) and bbox_bias is not None:
             mod_val = mod_val + bbox_bias
 
-        mod_val = model.values.squeeze()
         l0 = p.line(
             x=model.index,
             y=mod_val,
@@ -812,8 +809,8 @@ for key in storms.keys():
 
 
     prefix  = name[:3]
-    obs_dir = os.path.join(base_dirf,'obs')
-    mod_dir = os.path.join(base_dirf,'mod')
+    obs_dir = os.path.join(base_dirf,'work_dir','obs')
+    mod_dir = os.path.join(base_dirf,'work_dir','mod')
 
 
     print ( ' > Read NHC information ... ')
@@ -974,6 +971,7 @@ for key in storms.keys():
                 _metadata = series._metadata
                 obs = series.reindex(index=index, limit=1, method='nearest')
                 obs._metadata = _metadata
+                obs.dropna(inplace=True)
                 obs.name = _metadata['station_name']
                 ssh_observations.append(obs)
 
@@ -993,6 +991,8 @@ for key in storms.keys():
             if apply_bbox_bias:
                 bbox_bias =  get_bias(bias_bbox,ssh,ssh_table,fort61)
                 print ( ' Bbox bias correction   bias= {}'.format(bbox_bias) )
+            else:
+            	bbox_bias = 0.0
        
             ssh_coops_stations = True
         except:
@@ -1207,39 +1207,41 @@ for key in storms.keys():
             print('      > WARNING: ADCIRC maxelev in not available!')
         #
         #################################################################
-        try:
-            print('     > Plot CO-OPS SSH stations ..')
-            marker_cluster_coops = MarkerCluster(name='CO-OPS SSH observations')
-            marker_cluster_coops.add_to(m)    
-            
-            if ssh_coops_stations:
-                # ssh Observations stations 
-                for ssh1, model1 in zip(ssh_observations, ssh_from_model):
-                    fname = ssh1._metadata['station_code']
-                    location = ssh1._metadata['lat'], ssh1._metadata['lon']
-                    p = make_plot(ssh1, model1, label='SSH [m]',remove_mean_diff=remove_mean_diff, bbox_bias = bbox_bias)
-                    #p = make_plot(ssh1, ssh1)    
-                    marker = make_marker(p, location=location, fname=fname)
-                    marker.add_to(marker_cluster_coops)
-                    #del ssh_observations, ssh_from_model
-            else:
-                #plot obs only
-                for ssh1 in ssh:
-                    fname = ssh1._metadata['station_code']
-                    location = ssh1._metadata['lat'], ssh1._metadata['lon']
-                    p = make_plot_obs(ssh1, label='SSH [m]')
-                    #p = make_plot(ssh1, ssh1)    
-                    marker = make_marker(p, location=location, fname=fname)
-                    marker.add_to(marker_cluster_coops)
-                    #
-                    #del ssh
-        except:
-            print('      > WARNING: CO-OPS SSH OBS in not available!')
+        #try:
+        print('     > Plot COOPS SSH stations ..')
+        #marker_cluster_coops = MarkerCluster(name='CO-OPS SSH observations')
+        marker_cluster_coops = MarkerCluster(name='CO-OPS observations')
+        marker_cluster_coops.add_to(m)    
+        
+        if ssh_coops_stations:
+            # ssh Observations stations 
+            for ssh1, model1 in zip(ssh_observations, ssh_from_model):
+                fname = ssh1._metadata['station_code']
+                location = ssh1._metadata['lat'], ssh1._metadata['lon']
+                p = make_plot(ssh1, model1, label='SSH [m]',remove_mean_diff=remove_mean_diff, bbox_bias = bbox_bias)
+                #p = make_plot(ssh1, ssh1)    
+                marker = make_marker(p, location=location, fname=fname)
+                marker.add_to(marker_cluster_coops)
+                #del ssh_observations, ssh_from_model
+        else:
+            print ('      > plot coops obs only')
+            for ssh1 in ssh:
+                fname = ssh1._metadata['station_code']
+                location = ssh1._metadata['lat'], ssh1._metadata['lon']
+                p = make_plot_obs(ssh1, label='SSH [m]')
+                #p = make_plot(ssh1, ssh1)    
+                marker = make_marker(p, location=location, fname=fname)
+                marker.add_to(marker_cluster_coops)
+                #
+                #del ssh
+        #except:
+        #    print('      > WARNING: CO-OPS SSH OBS in not available!')
           
         ################################################################
         try:
-            print('     > Plot CO-OPS wind stations ..')
-            marker_clusterw = MarkerCluster(name='CO-OPS wind observations')
+            print('     > Plot COOPS wind stations ..')
+            #marker_clusterw = MarkerCluster(name='CO-OPS wind observations')
+            marker_clusterw = marker_cluster_coops
             marker_clusterw.add_to(m)
             if wind_coops_stations:
                 # Wind Observations stations.
@@ -1267,7 +1269,8 @@ for key in storms.keys():
         #################################################################
         try:
             print('     > Plot NDBC wave stations ..')
-            marker_cluster_ndbc = MarkerCluster(name='NDBC wave observations')
+            #marker_cluster_ndbc = MarkerCluster(name='NDBC wave observations')
+            marker_cluster_ndbc = MarkerCluster(name='NDBC observations')
             marker_cluster_ndbc.add_to(m)
 
             if wave_ndbc_stations:
@@ -1300,7 +1303,9 @@ for key in storms.keys():
         ########################################################################
         try:
             print('     > Plot NDBC wind stations ..')
-            marker_cluster_ndbcw = MarkerCluster(name='NDBC wind observations')
+            #marker_cluster_ndbcw = MarkerCluster(name='NDBC wind observations')
+            marker_cluster_ndbcw = marker_cluster_ndbc
+            
             marker_cluster_ndbcw.add_to(m)
 
             if wind_ndbc_stations:
@@ -1464,7 +1469,12 @@ for key in storms.keys():
         hwm     = df.elev_msl_m.values
 
         if 'HWM_ID' not in df.columns:
-            df['HWM_ID'] = 'Not available'
+            print ('       > Check hwm file: HWM_ID is missing ...')
+            df['HWM_ID'] = 'Key Error'
+
+        if 'Description' not in df.columns:
+            print ('       > Check hwm file: Description is missing ...')
+            df['Description'] = 'Key Error'        
 
         #
         #marker_cluster_hwm = MarkerCluster(name='High Water Marks')
@@ -1552,7 +1562,12 @@ if False:
                 #popup = popup[:50]
 
                 words = ' '.join(df['Description'][im].split()[:3])
-                popup = 'HWM_ID: {}<br>{}<br>Elev: {} [m, MSL]'.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
+                try:
+                    popup = 'HWM_ID: {}<br>{}<br>Elev: {} [m, MSL]'.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
+                except:
+                    print ( '  >>> NEED care ....  Redo hwm data prep for this storm .... ')
+                    popup = 'HWM_ID: {}<br>{}<br>Elev: {} [m, MSL]'.format(df['Description'][im],words,str(hwm[im])[:4])
+                    pass 
                 #popup = popup[:50]
 
                 
@@ -1573,7 +1588,7 @@ if False:
         Disclaimer_html =   '''
                         <div style="position: fixed; 
                                     bottom: 15px; left: 20px; width: 520px; height: 40px; 
-                                    border:2px solid grey; z-index:9999; font-size:12px; background-color: lightgray;opacity: 0.4;
+                                    border:2px solid grey; z-index:9999; font-size:12px; background-color: lightgray;opacity: 0.6;
                                     ">&nbsp; For Official Use Only. Pre-Decisional information not releasable outside US Government. <br>
                                       &nbsp; Contact: Saeed.Moghimi@noaa.gov CSDL/OCS/NOS/NOAA &nbsp; <br>
                         </div>
@@ -1585,7 +1600,7 @@ if False:
 
         storm_info_html ='''
                         <div style="position: fixed; 
-                                    bottom: 75px; left: 20px; width: 150px; height: 50px; 
+                                    bottom: 75px; left: 20px; width: 250px; height: 50px; 
                                     border:2px solid grey; z-index:9999; font-size:18px;background-color: lightgray;opacity: 0.6;
                                     ">&nbsp; Storm: {} <br>
                                       &nbsp; Year:  {}  &nbsp; <br>
