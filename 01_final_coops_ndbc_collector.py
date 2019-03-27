@@ -105,6 +105,7 @@ for key in storms.keys():
         lats_best   = np.r_[bounds[:,1],bounds[:,3]]
         bbox_best = lons_best.min(), lats_best.min(), lons_best.max(), lats_best.max()    
     except:
+        bbox_best = None
         pass   
         
         ################################################################################
@@ -113,10 +114,16 @@ for key in storms.keys():
     base = download_nhc_gis_files(hurricane_gis_files)
     # get advisory cones and track points
     cones,pts_actual,points_actual = read_advisory_cones_info(hurricane_gis_files,base,year,code)
-    start    = pts_actual[0] ['ADVDATE']
-    end      = pts_actual[-1]['ADVDATE']
-    start_txt_actual = ('20' + start[:-2]).replace('/','')
-    end_txt_actual   = ('20' + end  [:-2]).replace('/','')
+    if year is '2018':
+        start    = pts_actual[0] ['FLDATELBL']
+        end      = pts_actual[-1]['FLDATELBL']
+        start_txt_actual = start[0:4]+ start[5:7] + start[8:10]+ start[10:12].replace(' ','0')
+        end_txt_actual   = end[0:4]  + end[5:7]   + end[8:10]  + end[10:12].replace(' ','0')
+    else:
+        start    = pts_actual[0] ['ADVDATE']
+        end      = pts_actual[-1]['ADVDATE']
+        start_txt_actual = ('20' + start[:-2]).replace('/','')
+        end_txt_actual   = ('20' + end  [:-2]).replace('/','')
 
     # get bbox from actual data
     last_cone = cones[-1]['geometry'].iloc[0]
@@ -134,9 +141,10 @@ for key in storms.keys():
         end_txt   = end_txt_best
         #bbox      = bbox_best
     except:
-        start_txt = start_txt_actual
-        end_txt   = end_txt_actual
-    
+        pass 
+
+    start_txt = start_txt_actual
+    end_txt   = end_txt_actual
     bbox      = bbox_actual
 
     if storms[key]['bbox'] is not None:
@@ -161,7 +169,7 @@ for key in storms.keys():
     #
     #########
     # out dir
-    obs_dir = os.path.join(base_dirf,'obs')
+    obs_dir = os.path.join(base_dirf,'work_dir','obs')
     #
     #######
     print('  > Get water level information  CO-OPS')

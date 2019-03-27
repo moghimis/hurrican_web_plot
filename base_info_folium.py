@@ -24,15 +24,25 @@ import sys,os
 import datetime
 from   collections import defaultdict
 
-base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/wrk_dir/'
+base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
 #base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot/'
 
 
 storms = defaultdict(dict)
 
+
+
+key  = 'FLORENCE'
+storms[key]['name' ]   = key
+storms[key]['year' ]   = '2018'
+storms[key]['start']   = None 
+storms[key]['end'  ]   = None
+storms[key]['bbox' ]   = None    
+
+
+
 #if True:
 if False:
-
     
     key  = 'IRMA'
     storms[key]['name' ]   = key
@@ -49,13 +59,13 @@ if False:
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   =  -82.50, 12.90, -56.50, 47.30  
 
-if True:    
     key  = 'IKE'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2008'
     storms[key]['start']   = None 
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = None
+if False:    
 
     key  = 'SANDY'
     storms[key]['name' ]   = key
@@ -135,7 +145,7 @@ if False:
 #name    = 'ISABEL'
 
 
-base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
+#base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
 #base_dir = '/data01/data01/01-projects/07-NOAA-CoastalAct/04-working/02-hurricane/hurrican_web_plot/'
 
 #name = 'IRENE'
