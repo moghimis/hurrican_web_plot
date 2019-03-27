@@ -74,6 +74,9 @@ def model_on_data(data_dates, model_dates, model_val):
 
 #name  = 'IRENE'
 #year  = '2011'
+name = storms.keys()[0]
+year = storms[name]['year']
+
 
 include_wav_dir = False
 
@@ -229,8 +232,8 @@ for key in base_info.cases.keys():
         nc0.close()    
     
     
-    wave_inp = glob.glob(base_info.cases[key]['dir'] +'/inp_wavdata/*')
-    if len(wave_inp) > 0:
+    #wave_inp = glob.glob(base_info.wav_inp_dir+'/*')
+    if base_info.cases[key]['hsig_file'] is not None:
           print (' > Wave results ...')
           hsig_inp = base_info.cases[key]['hsig_file']
           wdir_inp = base_info.cases[key]['wdir_file']
@@ -277,8 +280,10 @@ for key in base_info.cases.keys():
 
           name1       = nc.createVariable(varname = 'station_name', datatype='S1', dimensions=('station','namelen',))
           for ista in range(len(sat_lab)):
-              label =  str(int(sat_lab[ista]))
-              #print (label)
+              #label =  str(int(sat_lab[ista]))
+              label =  str(sat_lab[ista])
+
+              print (label)
               for ich in range(len(label)):
                   name1[ista,ich]    = label[ich]
 
