@@ -1489,7 +1489,7 @@ for key in storms.keys():
             #popup = popup[:50]
 
             words = ' '.join(df['Description'][im].split()[:3])
-            popup = 'HWM_ID: {}<br>{}<br>Elev: {} [m, MSL]'.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
+            popup = 'HWM_ID: {} <br> {} <br> Elev: {} [m, MSL]'.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
             
             
             #popup = popup[:50]
