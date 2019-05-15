@@ -39,8 +39,8 @@ if False:
 	storms[key]['end'  ]   = None
 	storms[key]['bbox' ]   = None    
 
-#if True:
-if False:
+if True:
+#if False:
     key  = 'SANDY'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2012'
@@ -48,7 +48,7 @@ if False:
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = -82.50, 10.50, -65.50, 41.80
 
-if True:
+if False:
     key  = 'IRMA'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2017'

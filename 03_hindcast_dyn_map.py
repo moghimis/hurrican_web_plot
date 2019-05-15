@@ -65,6 +65,9 @@ from bokeh.plotting import figure
 from bokeh.models import Title
 from bokeh.embed import file_html
 from bokeh.models import Range1d, LinearAxis, HoverTool
+from bokeh.layouts import gridplot
+from bokeh.models import ColumnDataSource
+
 
 from folium import IFrame
 from geopandas import GeoDataFrame
@@ -346,11 +349,114 @@ def make_plot(obs, model = None,label=None,remove_mean_diff=False,bbox_bias=0.0)
     )
     return p
 
+
+#def make_plot(obs, model = None,label,remove_mean_diff=False,bbox_bias=None):
+def make_dual_plot(obs, model = None,label=None,remove_mean_diff=False,bbox_bias=0.0):    
+    #TOOLS="hover,crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,undo,redo,reset,tap,save,box_select,poly_select,lasso_select,"
+    
+    
+    if model is None:
+        sys.exit('Model can not be none')
+    
+    
+    df = obs.copy()
+    df ['obs'] = obs.values
+    df ['mod'] = model
+    df = df.dropna()
+
+    
+    if True:
+        if ('SSH' in label) and remove_mean_diff:
+           df ['mod'] = df ['mod'] + df ['obs'].mean() - df ['mod'].mean()
+
+        if ('SSH' in label) and bbox_bias is not None:
+            df ['mod'] = df ['mod'] + bbox_bias    
+
+    
+    # create a column data source for the plots to share
+    src = ColumnDataSource(data=dict(x=df.index, yo=df['obs'].values,  ym=df['mod'].values))
+
+    TOOLS="box_select,lasso_select,crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,reset,save,help,"
+
+    left = figure(toolbar_location='above',
+               x_axis_type='datetime',
+               width=width,
+               height=height,
+               tools=TOOLS)
+
+    left.add_layout(Title(text='Station: '+obs._metadata['station_code'], text_font_style="italic"), 'above')
+    left.add_layout(Title(text=obs._metadata['station_name'], text_font_size="10pt"), 'above')
+
+    left.yaxis.axis_label = label
+
+
+    l1 = left.line(
+        x='x',
+        y='yo',
+        line_width=5,
+        line_cap='round',
+        line_join='round',
+        legend='obs.',
+        color='#0000ff',
+        alpha=0.7,
+        source = src,
+    )
+
+
+    l0 = left.line(
+        x='x',
+        y='ym',
+        line_width=5,
+        line_cap='round',
+        line_join='round',
+        legend='model',
+        color='#9900cc',
+        alpha=0.7,
+        source =src
+    )
+
+
+
+    left.x_range = Range1d(
+        start = df.index.min(),
+        end   = df.index.max()
+    )
+
+
+    left.legend.location = 'top_left'
+
+    left.add_tools(
+        HoverTool(
+            tooltips=[
+                ('model', '@ym'),
+            ],
+            renderers=[l0],
+        ),
+        HoverTool(
+            tooltips=[
+                ('obs.', '@yo'),
+            ],
+            renderers=[l1],
+        ),
+    )
+    
+    right =  figure(tools=TOOLS, plot_width=height, plot_height=height, title=None)
+    right.circle('yo', 'ym', source=src)
+    
+    p = gridplot([[right,left]])
+    
+    return p
+
+
+
+
+
+
+
 #################
 def make_marker(p, location, fname , color = 'green',icon= 'stats'):
     html = file_html(p, CDN, fname)
     iframe = IFrame(html, width=width+45, height=height+80)
-
     popup = folium.Popup(iframe, max_width=2650)
     iconm = folium.Icon(color = color, icon=icon)
     marker = folium.Marker(location=location,
@@ -1218,7 +1324,11 @@ for key in storms.keys():
             for ssh1, model1 in zip(ssh_observations, ssh_from_model):
                 fname = ssh1._metadata['station_code']
                 location = ssh1._metadata['lat'], ssh1._metadata['lon']
-                p = make_plot(ssh1, model1, label='SSH [m]',remove_mean_diff=remove_mean_diff, bbox_bias = bbox_bias)
+                ###p = make_plot(ssh1, model1, label='SSH [m]',remove_mean_diff=remove_mean_diff, bbox_bias = bbox_bias)
+                
+                p = make_dual_plot(ssh1, model1, label='SSH [m]',remove_mean_diff=remove_mean_diff, bbox_bias = bbox_bias)
+
+
                 #p = make_plot(ssh1, ssh1)    
                 marker = make_marker(p, location=location, fname=fname)
                 marker.add_to(marker_cluster_coops)
@@ -1489,8 +1599,17 @@ for key in storms.keys():
             #popup = popup[:50]
 
             words = ' '.join(df['Description'][im].split()[:3])
-            popup = 'HWM_ID: {} <br> {} <br> Elev: {} [m, MSL]'.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
+            #popup = 'HWM_ID: {} <br> {} <br> Elev: {} [m, MSL]'.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
             
+
+            popup = """
+            <div style="width: 180px;" </div>
+            <h4> High Water Mark data</h4> <br>
+            'HWM_ID:     {} <br> 
+            Description: {} <br>
+            Elev:        {} [m, MSL]'
+            """.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
+
             
             #popup = popup[:50]
 
@@ -1512,15 +1631,13 @@ for key in storms.keys():
     Disclaimer_html =   '''
                     <div style="position: fixed; 
                                 bottom: 15px; left: 20px; width: 520px; height: 40px; 
-                                border:2px solid grey; z-index:9999; font-size:12px; background-color: lightgray;opacity: 0.4;
+                                border:2px solid grey; z-index:9999; font-size:12px; background-color: lightgray;opacity: 0.6;
                                 ">&nbsp; For Official Use Only. Pre-Decisional information not releasable outside US Government. <br>
                                   &nbsp; Contact: Saeed.Moghimi@noaa.gov CSDL/OCS/NOS/NOAA &nbsp; <br>
                     </div>
                     ''' 
 
     m.get_root().html.add_child(folium.Element(Disclaimer_html))
-
-
 
     storm_info_html ='''
                     <div style="position: fixed; 
@@ -1562,11 +1679,18 @@ if False:
                 #popup = popup[:50]
 
                 words = ' '.join(df['Description'][im].split()[:3])
+
+
                 try:
-                    popup = 'HWM_ID: {}<br>{}<br>Elev: {} [m, MSL]'.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
+	                popup = """
+	                <h3> High Water Mark </h3><br>
+	                'HWM_ID: {}<br> 
+	                Description: {} <br>
+	                Elev: {} [m, MSL]'
+	                """.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
                 except:
                     print ( '  >>> NEED care ....  Redo hwm data prep for this storm .... ')
-                    popup = 'HWM_ID: {}<br>{}<br>Elev: {} [m, MSL]'.format(df['Description'][im],words,str(hwm[im])[:4])
+                    popup = ''#'HWM_ID: {}<br>{}<br>Elev: {} [m, MSL]'.format(df['Description'][im],words,str(hwm[im])[:4])
                     pass 
                 #popup = popup[:50]
 
