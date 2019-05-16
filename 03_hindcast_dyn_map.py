@@ -347,6 +347,7 @@ def make_plot(obs, model = None,label=None,remove_mean_diff=False,bbox_bias=0.0)
             renderers=[l1],
         ),
     )
+    
     return p
 
 
@@ -372,9 +373,11 @@ def make_dual_plot(obs, model = None,label=None,remove_mean_diff=False,bbox_bias
         if ('SSH' in label) and bbox_bias is not None:
             df ['mod'] = df ['mod'] + bbox_bias    
 
-    
+    # https://bokeh.pydata.org/en/latest/docs/user_guide/interaction/linking.html#linked-brushing
     # create a column data source for the plots to share
-    src = ColumnDataSource(data=dict(x=df.index, yo=df['obs'].values,  ym=df['mod'].values))
+    src = ColumnDataSource(data=dict(x  = df.index.to_pydatetime(), 
+                                     yo = df['obs'].values,  
+                                     ym = df['mod'].values))
 
     TOOLS="box_select,lasso_select,crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,reset,save,help,"
 
@@ -388,7 +391,7 @@ def make_dual_plot(obs, model = None,label=None,remove_mean_diff=False,bbox_bias
     left.add_layout(Title(text=obs._metadata['station_name'], text_font_size="10pt"), 'above')
 
     left.yaxis.axis_label = label
-
+    left.xaxis.axis_label = 'DateTime'
 
     l1 = left.line(
         x='x',
@@ -428,36 +431,88 @@ def make_dual_plot(obs, model = None,label=None,remove_mean_diff=False,bbox_bias
     left.add_tools(
         HoverTool(
             tooltips=[
-                ('model', '@ym'),
+                ('Model', '@ym'),
             ],
             renderers=[l0],
+            # display a tooltip whenever the cursor is vertically in line with a glyph
+            mode='vline',            
         ),
         HoverTool(
             tooltips=[
-                ('obs.', '@yo'),
+                ('Obs.', '@yo'),
             ],
             renderers=[l1],
+            # display a tooltip whenever the cursor is vertically in line with a glyph
+            mode='vline',
         ),
     )
     
-    right =  figure(tools=TOOLS, plot_width=height, plot_height=height, title=None)
+   # left.add_tools(
+   #     HoverTool(
+   #         tooltips=[
+   #             ('Model', '@ym'),
+   #             ('Obs.', '@yo'),
+   #         ],
+   #         # display a tooltip whenever the cursor is vertically in line with a glyph
+   #         mode='vline'
+   #     ),
+   #
+   # )
+           
+    
+    
+    
+    
+    ## display a tooltip whenever the cursor is vertically in line with a glyph
+    #mode='vline'
+    
+    
+    ####  https://bokeh.pydata.org/en/latest/docs/user_guide/tools.html
+    #  https://bokeh.pydata.org/en/1.0.0/docs/user_guide/examples/tools_hover_tooltip_formatting.html
+    #rTOOLTIPS = [
+    #("Date" , "$x"),
+    #("Obs." , "$yo"),    
+    #("Model", "$ym"),
+    #]
+    #hover_tool.formatters = { "x": "datetime"}
+
+    #right =  figure(tools=TOOLS, plot_width=height, plot_height=height, title='Select',tooltips=rTOOLTIPS)
+    right =  figure(tools=TOOLS, plot_width=height, plot_height=height, title='Select from ...')
+    
     right.circle('yo', 'ym', source=src)
+    right.yaxis.axis_label = 'Model'    
+    right.xaxis.axis_label = 'Obs.'    
+    
+    right.add_tools(
+        HoverTool(
+            tooltips=[
+                #('Date' , '@x'),
+                ('Model', '@ym'),                
+                ('Obs.' , '@yo'),    
+            ],
+            formatters={
+                'x'      : 'datetime', # use 'datetime' formatter for 'date' field
+                                       # use default 'numeral' formatter for other fields
+                },
+        ),
+        
+    )
+    
+    
+    
+    
     
     p = gridplot([[right,left]])
     
     return p
 
 
-
-
-
-
-
 #################
 def make_marker(p, location, fname , color = 'green',icon= 'stats'):
     html = file_html(p, CDN, fname)
-    iframe = IFrame(html, width=width+45, height=height+80)
-    popup = folium.Popup(iframe, max_width=2650)
+    iframe = IFrame(html, width=width+45+height, height=height+80)
+    #popup = folium.Popup(iframe, max_width=2650+height)
+    popup = folium.Popup(iframe)
     iconm = folium.Icon(color = color, icon=icon)
     marker = folium.Marker(location=location,
                            popup=popup,
