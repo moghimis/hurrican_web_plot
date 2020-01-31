@@ -4,7 +4,7 @@ import requests
 import json
 import csv
 import pandas as pd
-
+import re,os
 """
 Base script from Jaime Calzada
 https://github.com/jreniel/adcircpy/blob/master/AdcircPy/Validation/USGS/HighWaterMarks.py
@@ -85,7 +85,48 @@ class HighWaterMarks(OrderedDict):
         return axes
 
     @classmethod
-    def _get_event_id_from_name(cls, event_name):
+    def from_url(cls, event_name,filter_dict=None):
+        """
+        USGS is not standardizing event naming. Sometimes years are included,
+        but sometimes they are ommitted. The order in which the names are in
+        the response is also not standardized. Some workaround come into play
+        in this algorithm in order to identify and categorize the dataset.
+        USGS should standardize their REST server data.
+        """
+        
+        if not os.path.exists( 'usgs_hwm_tmp.json'):
+            response = requests.get(cls.url, params=cls.params)
+            response.raise_for_status()
+            json_data = json.loads(response.text)
+            with open('usgs_hwm_tmp.json', 'w') as outfile:
+                json.dump(json_data, outfile )
+        else:
+            with open('usgs_hwm_tmp.json') as json_file:
+                json_data = json.load(json_file)
+        
+        events = set()
+        
+        req_event , req_year = re.split('(\d+)',event_name.lower())[:2] 
+        
+        for item in json_data:
+            event = item['eventName'].lower().split()
+            if req_event in event:
+               eventName = req_event.capitalize()
+               eventYear = req_year
+               events.add((eventName, eventYear, int(item['event_id'])))
+        
+        hwm_stations = dict()
+        for data in json_data:
+            if 'elev_ft' in data.keys():
+                hwm_stations[str(data['hwm_id'])] = data
+        filter_dict = cls._init_filter_dict(filter_dict)
+      
+        return cls(eventName, eventYear,
+                   filter_dict=filter_dict, **hwm_stations)  
+        
+
+    @classmethod
+    def _get_event_id_from_name_old(cls, event_name):
         """
         USGS is not standardizing event naming. Sometimes years are included,
         but sometimes they are ommitted. The order in which the names are in
@@ -141,6 +182,9 @@ class HighWaterMarks(OrderedDict):
                           for event in list(events_dict.keys())]
             raise Exception('\nEvent name not Found!\n \
                             Valid event names are:\n{}'.format(eventNames))
+
+
+
 
     @classmethod
     def _init_filter_dict(cls, filter_dict):

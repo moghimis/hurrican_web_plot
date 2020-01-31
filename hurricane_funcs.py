@@ -34,7 +34,6 @@ from io import BytesIO
 from ioos_tools.ioos import collector2table
 import pickle 
 
-from highwatermarks import HighWaterMarks
 from glob import glob
 
 try:
@@ -44,6 +43,16 @@ except:
 import lxml.html
 
 import wget
+
+
+
+#from highwatermarks import HighWaterMarks
+from collections import OrderedDict
+import json
+import pandas as pd
+import re,os
+
+
 
 ##################
 def url_lister(url):
@@ -720,43 +729,12 @@ def read_csv(obs_dir, name, year, label):
 
 
 ################# NEW universal ###############################
-#TODO: all need to get updated to use this one!!!!!
-def write_high_water_marks_poor(obs_dir, name, year):
-        
-    nameyear = (name+year).lower()
-    fname = os.path.join(obs_dir,nameyear+'.csv')
-
-    log = HighWaterMarks.from_event_name(nameyear)
-
-    #convert to DataFrame
-    columns_req = ['latitude','longitude','hwmQualityName','verticalDatumName','elev_ft']
-    hwm = []   
-    ii = 0
-    for key in log.keys():
-        l0 = []
-        for key0 in columns_req :
-            l0.append(log[key][key0])
-        hwm.append(l0)
-    #
-    hwm = np.array(hwm)     
-    df = pd.DataFrame(data=hwm, columns=columns_req) 
-    #
-    if drop_poor:
-        for i in range(len(df)):
-            tt = df.hwmQualityName[i]
-            if 'poor' in tt.lower():
-                df.hwmQualityName[i] = np.nan    
-        df  = df.dropna()    
-
-    df['elev_m'] = pd.to_numeric(df['elev_ft']) *  0.3048  #in meter
-    df.to_csv(fname)
-    #return df 
 
 def write_high_water_marks(obs_dir, name, year):
     nameyear = (name+year).lower()
     fname = os.path.join(obs_dir,nameyear+'.csv')
     # download data from usgs
-    log = HighWaterMarks.from_event_name(nameyear)
+    log = HighWaterMarks.from_url(nameyear)
 
     hwm = []   
     ii = 0
@@ -780,6 +758,101 @@ def write_high_water_marks(obs_dir, name, year):
     df['elev_m'] = pd.to_numeric(df['elev_ft']) *  0.3048  #in meter
     #
     df.to_csv(fname) 
+
+
+
+
+
+
+
+
+
+def get_hwm_from_usgs(cls, event_name):
+    """
+    Adapted from Jaime
+    USGS is not standardizing event naming. Sometimes years are included,
+    but sometimes they are ommitted. The order in which the names are in
+    the response is also not standardized. Some workaround come into play
+    in this algorithm in order to identify and categorize the dataset.
+    USGS should standardize their REST server data.
+    """
+
+url = 'https://stn.wim.usgs.gov/STNServices/HWMs/FilteredHWMs.json'
+params = {'EventType': 2,  # 2 for hurricane
+          'EventStatus': 0}  # 0 for completed
+default_filter = {"riverine": True,
+                  "non_still_water": True}
+
+
+if not os.path.exists( 'usgs_hwm_tmp.json'):
+    response = requests.get(cls.url, params=cls.params)
+    response.raise_for_status()
+    json_data = json.loads(response.text)
+    with open('usgs_hwm_tmp.json', 'w') as outfile:
+        json.dump(json_data, outfile )
+else:
+    with open('usgs_hwm_tmp.json') as json_file:
+        json_data = json.load(json_file)
+
+events = set()
+
+req_event , req_year = re.split('(\d+)',event_name.lower())[:2] 
+
+for item in json_data:
+    event = item['eventName'].lower().split()
+    if req_event in event:
+       eventName = req_event.capitalize()
+       eventYear = req_year
+       events.add((eventName, eventYear, int(item['event_id'])))
+
+hwm_stations = dict()
+for data in json_data:
+    if 'elev_ft' in data.keys() and req_event in data['eventName'].lower():
+        hwm_stations[str(data['hwm_id'])] = data
+
+log = pd.DataFrame.from_dict(hwm_stations)
+
+
+hwm = []   
+ii = 0
+for key in log.keys():
+    l0 = []
+    for key0 in log[key].keys() :
+        l0.append(log[key][key0])
+    hwm.append(l0)
+#
+hwm = np.array(hwm)     
+df = pd.DataFrame(data=hwm, columns=log[key].keys()) 
+
+
+
+
+
+
+filter_dict = cls._init_filter_dict(filter_dict)
+
+return cls(event_name, event_year,
+           filter_dict=filter_dict, **hwm_stations)  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
