@@ -53,6 +53,9 @@ import pandas as pd
 import re,os
 
 
+headers = ({'User-Agent':
+            'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'})
+
 
 ##################
 def url_lister(url):
@@ -110,7 +113,7 @@ def get_nhc_storm_info (year,name):
      
     url = 'http://www.nhc.noaa.gov/gis/archive_wsurge.php?year='+year
 
-    r = requests.get(url)
+    r = requests.get(url,headers=headers)
 
     soup = BeautifulSoup(r.content, 'lxml')
 
@@ -141,7 +144,7 @@ def get_nhc_storm_info (year,name):
 
 
 #################
-@retry(stop_max_attempt_number=15, wait_fixed=30000)
+@retry(stop_max_attempt_number=5, wait_fixed=3000)
 def download_nhc_gis_files(hurricane_gis_files):
     """
     
@@ -164,9 +167,10 @@ def download_nhc_gis_files(hurricane_gis_files):
         os.makedirs(base)
 
     for fname in fnames:
-        url = '{}/{}'.format(nhc, fname)
-        path = os.path.join(base, fname)
-        download(url, path,fname)
+        if not os.path.exists(path):
+            url = '{}/{}'.format(nhc, fname)
+            path = os.path.join(base, fname)
+            download(url, path,fname)
 
     return base
     #################################
@@ -508,7 +512,7 @@ def get_coops_stations_info(type = 'wlev'):
         sys.exit(' ERORR: Not implemeted yet ..')          
         
     url  = 'https://opendap.co-ops.nos.noaa.gov/ioos-dif-sos/ClientGetter?p={}'.format(num)
-    r    = requests.get(url)
+    r    = requests.get(url,headers=headers)
     
     soup = BeautifulSoup(r.content, 'lxml')
     
@@ -559,7 +563,7 @@ def get_ndbc_stations_info(type = 'wave'):
 
     """
     url  = 'https://sdf.ndbc.noaa.gov/stations.shtml'
-    r    = requests.get(url)
+    r    = requests.get(url,headers=headers)
     
     soup = BeautifulSoup(r.content, 'lxml')
     
@@ -725,16 +729,39 @@ def read_csv(obs_dir, name, year, label):
     
     
     
-
-
-
-################# NEW universal ###############################
-
 def write_high_water_marks(obs_dir, name, year):
+    url = 'https://stn.wim.usgs.gov/STNServices/HWMs/FilteredHWMs.json'
+    params = {'EventType': 2,  # 2 for hurricane
+              'EventStatus': 0}  # 0 for completed
+    default_filter = {"riverine": True,
+                      "non_still_water": True}
+
     nameyear = (name+year).lower()
-    fname = os.path.join(obs_dir,nameyear+'.csv')
-    # download data from usgs
-    log = HighWaterMarks.from_url(nameyear)
+    
+    out_dir = os.path.join(obs_dir,'hwm')
+    
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    
+    fname = os.path.join(out_dir,nameyear+'.csv')
+    usgs_json_file = os.path.join(out_dir,'usgs_hwm_tmp.json')
+
+    if not os.path.exists( usgs_json_file):
+        response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+        json_data = json.loads(response.text)
+        with open(usgs_json_file, 'w') as outfile:
+            json.dump(json_data, outfile )
+    else:
+        with open(usgs_json_file) as json_file:
+            json_data = json.load(json_file)
+
+    hwm_stations = dict()
+    for data in json_data:
+        if 'elev_ft' in data.keys() and name.lower() in data['eventName'].lower():
+            hwm_stations[str(data['hwm_id'])] = data
+
+    log = pd.DataFrame.from_dict(hwm_stations)
 
     hwm = []   
     ii = 0
@@ -746,137 +773,24 @@ def write_high_water_marks(obs_dir, name, year):
     #
     hwm = np.array(hwm)     
     df = pd.DataFrame(data=hwm, columns=log[key].keys()) 
-    #
+
+
     drop_poor = False
     if drop_poor:
         for i in range(len(df)):
             tt = df.hwmQualityName[i]
             if 'poor' in tt.lower():
                 df.hwmQualityName[i] = np.nan    
-    
-    df  = df.dropna()    
+
+        df  = df.dropna()    
     df['elev_m'] = pd.to_numeric(df['elev_ft']) *  0.3048  #in meter
     #
     df.to_csv(fname) 
 
 
 
-
-
-
-
-
-
-def get_hwm_from_usgs(cls, event_name):
-    """
-    Adapted from Jaime
-    USGS is not standardizing event naming. Sometimes years are included,
-    but sometimes they are ommitted. The order in which the names are in
-    the response is also not standardized. Some workaround come into play
-    in this algorithm in order to identify and categorize the dataset.
-    USGS should standardize their REST server data.
-    """
-
-url = 'https://stn.wim.usgs.gov/STNServices/HWMs/FilteredHWMs.json'
-params = {'EventType': 2,  # 2 for hurricane
-          'EventStatus': 0}  # 0 for completed
-default_filter = {"riverine": True,
-                  "non_still_water": True}
-
-
-if not os.path.exists( 'usgs_hwm_tmp.json'):
-    response = requests.get(cls.url, params=cls.params)
-    response.raise_for_status()
-    json_data = json.loads(response.text)
-    with open('usgs_hwm_tmp.json', 'w') as outfile:
-        json.dump(json_data, outfile )
-else:
-    with open('usgs_hwm_tmp.json') as json_file:
-        json_data = json.load(json_file)
-
-events = set()
-
-req_event , req_year = re.split('(\d+)',event_name.lower())[:2] 
-
-for item in json_data:
-    event = item['eventName'].lower().split()
-    if req_event in event:
-       eventName = req_event.capitalize()
-       eventYear = req_year
-       events.add((eventName, eventYear, int(item['event_id'])))
-
-hwm_stations = dict()
-for data in json_data:
-    if 'elev_ft' in data.keys() and req_event in data['eventName'].lower():
-        hwm_stations[str(data['hwm_id'])] = data
-
-log = pd.DataFrame.from_dict(hwm_stations)
-
-
-hwm = []   
-ii = 0
-for key in log.keys():
-    l0 = []
-    for key0 in log[key].keys() :
-        l0.append(log[key][key0])
-    hwm.append(l0)
-#
-hwm = np.array(hwm)     
-df = pd.DataFrame(data=hwm, columns=log[key].keys()) 
-
-
-
-
-
-
-filter_dict = cls._init_filter_dict(filter_dict)
-
-return cls(event_name, event_year,
-           filter_dict=filter_dict, **hwm_stations)  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
     obs_station_list_gen()
-
-
-
-
-
-
-
-
 
 
 

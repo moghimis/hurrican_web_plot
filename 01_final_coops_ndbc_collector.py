@@ -76,6 +76,20 @@ if False:
     obs_station_list_gen()
 #
 #######
+# out dir
+obs_dir = os.path.join(base_dirf,'obs')
+
+   
+if get_usgs_hwm:
+    for key in storms.keys():
+        name = storms[key]['name']
+        year = storms[key]['year']
+        print('  > Get USGS HWM for ', name)
+        try:
+            write_high_water_marks(obs_dir, name, year)  
+        except:
+            print (' > Get USGS HWM for ', name , '   ERROR ...')
+
 
 for key in storms.keys():
     name = storms[key]['name']
@@ -84,8 +98,6 @@ for key in storms.keys():
     print('\n\n\n\n\n\n********************************************************')
     print(            '*****  Storm name ',name, '      Year ',  year, '    *********')
     print(            '******************************************************** \n\n\n\n\n\n')
-
-
 
 
     #bbox_from_best_track = False
@@ -179,10 +191,6 @@ for key in storms.keys():
     print(            '******************************************************** \n\n\n\n\n\n')
     #
     #########
-    # out dir
-    obs_dir = os.path.join(base_dirf,'obs')
-    #
-    #######
     
     if get_cops_wlev:
         try:
@@ -247,9 +255,7 @@ for key in storms.keys():
         except:  
             print('  > Get wave ocean information (ndbc)  >>> ERRORRRR ')
     ######
-    if get_usgs_hwm:
-        print('  > Get USGS HWM ... ')
-        write_high_water_marks(obs_dir, name, year)
+
     
 
 

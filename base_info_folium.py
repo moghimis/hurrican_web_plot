@@ -137,8 +137,6 @@ if True:
     storms[key]['bbox' ]   = None
 
 
-
-
 get_cops_wlev = False
 get_cops_wind = False
 get_ndbc_wave = False
