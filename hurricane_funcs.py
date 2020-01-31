@@ -16,8 +16,6 @@ __license__ = "GPL"
 __version__ = "1.0"
 __email__ = "moghimis@gmail.com"
 
-
-
 import pandas    as pd
 import geopandas as gpd
 import numpy as np
@@ -36,6 +34,7 @@ from io import BytesIO
 from ioos_tools.ioos import collector2table
 import pickle 
 
+from highwatermarks import HighWaterMarks
 from glob import glob
 
 try:
@@ -133,7 +132,7 @@ def get_nhc_storm_info (year,name):
 
 
 #################
-@retry(stop_max_attempt_number=5, wait_fixed=3000)
+@retry(stop_max_attempt_number=15, wait_fixed=30000)
 def download_nhc_gis_files(hurricane_gis_files):
     """
     
@@ -717,6 +716,81 @@ def read_csv(obs_dir, name, year, label):
     
     
     
+
+
+
+################# NEW universal ###############################
+#TODO: all need to get updated to use this one!!!!!
+def write_high_water_marks_poor(obs_dir, name, year):
+        
+    nameyear = (name+year).lower()
+    fname = os.path.join(obs_dir,nameyear+'.csv')
+
+    log = HighWaterMarks.from_event_name(nameyear)
+
+    #convert to DataFrame
+    columns_req = ['latitude','longitude','hwmQualityName','verticalDatumName','elev_ft']
+    hwm = []   
+    ii = 0
+    for key in log.keys():
+        l0 = []
+        for key0 in columns_req :
+            l0.append(log[key][key0])
+        hwm.append(l0)
+    #
+    hwm = np.array(hwm)     
+    df = pd.DataFrame(data=hwm, columns=columns_req) 
+    #
+    if drop_poor:
+        for i in range(len(df)):
+            tt = df.hwmQualityName[i]
+            if 'poor' in tt.lower():
+                df.hwmQualityName[i] = np.nan    
+        df  = df.dropna()    
+
+    df['elev_m'] = pd.to_numeric(df['elev_ft']) *  0.3048  #in meter
+    df.to_csv(fname)
+    #return df 
+
+def write_high_water_marks(obs_dir, name, year):
+    nameyear = (name+year).lower()
+    fname = os.path.join(obs_dir,nameyear+'.csv')
+    # download data from usgs
+    log = HighWaterMarks.from_event_name(nameyear)
+
+    hwm = []   
+    ii = 0
+    for key in log.keys():
+        l0 = []
+        for key0 in log[key].keys() :
+            l0.append(log[key][key0])
+        hwm.append(l0)
+    #
+    hwm = np.array(hwm)     
+    df = pd.DataFrame(data=hwm, columns=log[key].keys()) 
+    #
+    drop_poor = False
+    if drop_poor:
+        for i in range(len(df)):
+            tt = df.hwmQualityName[i]
+            if 'poor' in tt.lower():
+                df.hwmQualityName[i] = np.nan    
+    
+    df  = df.dropna()    
+    df['elev_m'] = pd.to_numeric(df['elev_ft']) *  0.3048  #in meter
+    #
+    df.to_csv(fname) 
+
+
+
+
+
+
+
+
+
+
+
 
 
 

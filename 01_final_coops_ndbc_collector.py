@@ -28,6 +28,8 @@ from pyoos.collectors.ndbc.ndbc_sos import NdbcSos
 from pyoos.collectors.coops.coops_sos import CoopsSos
 from retrying import retry
 import datetime
+import dateparser
+
 import cf_units
 from io import BytesIO
 from ioos_tools.ioos import collector2table
@@ -88,6 +90,8 @@ for key in storms.keys():
 
     #bbox_from_best_track = False
     code,hurricane_gis_files = get_nhc_storm_info (year,name)
+    
+    
     #if bbox_from_best_track:
     try:    
         ################################################################################
@@ -105,7 +109,6 @@ for key in storms.keys():
         lats_best   = np.r_[bounds[:,1],bounds[:,3]]
         bbox_best = lons_best.min(), lats_best.min(), lons_best.max(), lats_best.max()    
     except:
-        bbox_best = None
         pass   
         
         ################################################################################
@@ -114,17 +117,35 @@ for key in storms.keys():
     base = download_nhc_gis_files(hurricane_gis_files)
     # get advisory cones and track points
     cones,pts_actual,points_actual = read_advisory_cones_info(hurricane_gis_files,base,year,code)
-    if year is '2018':
-        start    = pts_actual[0] ['FLDATELBL']
-        end      = pts_actual[-1]['FLDATELBL']
-        start_txt_actual = start[0:4]+ start[5:7] + start[8:10]+ start[10:12].replace(' ','0')
-        end_txt_actual   = end[0:4]  + end[5:7]   + end[8:10]  + end[10:12].replace(' ','0')
-    else:
-        start    = pts_actual[0] ['ADVDATE']
-        end      = pts_actual[-1]['ADVDATE']
-        start_txt_actual = ('20' + start[:-2]).replace('/','')
-        end_txt_actual   = ('20' + end  [:-2]).replace('/','')
+    start    = pts_actual[0] ['FLDATELBL']
+    end      = pts_actual[-1]['FLDATELBL']
+    #start_txt_actual = ('20' + start[:-2]).replace('/','')
+    #end_txt_actual   = ('20' + end  [:-2]).replace('/','')
 
+
+    #print('\n\n\n\n\n\n ********************************************************')
+    #for key1 in pts_actual[0].keys():
+    #    print(            '*****  pts_actual[0] [', key1, ']',pts_actual[0] [key1]   ,  '*********')
+    #print(            '******************************************************** \n\n\n\n\n\n')
+
+    start_dt = dateparser.parse(start,settings={"TO_TIMEZONE": "UTC"}).replace(tzinfo=None) - obs_xtra_days
+    end_dt   = dateparser.parse(end  ,settings={"TO_TIMEZONE": "UTC"}).replace(tzinfo=None) + obs_xtra_days   
+    
+    #try:
+    #    # bbox_from_best_track:
+    #    start_txt = start_txt_best
+    #    end_txt   = end_txt_best
+    #    #bbox      = bbox_best
+    #except:
+    #    start_txt = start_txt_actual
+    #    end_txt   = end_txt_actual
+
+    #
+    #start_dt = arrow.get(start_txt, 'YYYYMMDDhh').datetime - obs_xtra_days
+    #end_dt   = arrow.get(end_txt  , 'YYYYMMDDhh').datetime + obs_xtra_days    
+
+    
+    #if False:
     # get bbox from actual data
     last_cone = cones[-1]['geometry'].iloc[0]
     track = LineString([point['geometry'] for point in pts_actual])
@@ -135,16 +156,8 @@ for key in storms.keys():
 
     # Find the bounding box to search the data.
     bbox_from_best_track = False
-    try:
-        # bbox_from_best_track:
-        start_txt = start_txt_best
-        end_txt   = end_txt_best
-        #bbox      = bbox_best
-    except:
-        pass 
 
-    start_txt = start_txt_actual
-    end_txt   = end_txt_actual
+    
     bbox      = bbox_actual
 
     if storms[key]['bbox'] is not None:
@@ -156,9 +169,7 @@ for key in storms.keys():
     # Note that the bounding box is derived from the track and the latest prediction cone.
     strbbox = ', '.join(format(v, '.2f') for v in bbox)
 
-    #
-    start_dt = arrow.get(start_txt, 'YYYYMMDDhh').datetime - obs_xtra_days
-    end_dt   = arrow.get(end_txt  , 'YYYYMMDDhh').datetime + obs_xtra_days
+
     #
     # Note that the bounding box is derived from the track and the latest prediction cone.
     strbbox = ', '.join(format(v, '.2f') for v in bbox)
@@ -169,55 +180,77 @@ for key in storms.keys():
     #
     #########
     # out dir
-    obs_dir = os.path.join(base_dirf,'work_dir','obs')
+    obs_dir = os.path.join(base_dirf,'obs')
     #
     #######
-    print('  > Get water level information  CO-OPS')
-    ssh, ssh_table = get_coops(
-        start=start_dt,
-        end=end_dt,
-        sos_name='water_surface_height_above_reference_datum',
-        units=cf_units.Unit('meters'),
-        datum = 'MSL',
-        bbox=bbox,
-        )
+    
+    if get_cops_wlev:
+        try:
+            print('  > Get water level information CO-OPS ... ')
+            ssh, ssh_table = get_coops(
+                start=start_dt,
+                end=end_dt,
+                sos_name='water_surface_height_above_reference_datum',
+                units=cf_units.Unit('meters'),
+                datum = 'MSL',
+                bbox=bbox,
+                )
 
-    write_csv(obs_dir, name, year, table=ssh_table    , data= ssh     , label='coops_ssh' )
+            write_csv(obs_dir, name, year, table=ssh_table    , data= ssh     , label='coops_ssh' )
 
-    #######
-    print('  > Get wind information CO-OPS')
-    wnd_obs, wnd_obs_table = get_coops(
-        start=start_dt,
-        end=end_dt,
-        sos_name='wind_speed',
-        units=cf_units.Unit('m/s'),
-        bbox=bbox,
-        )
-
-    write_csv(obs_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
-
+        except:
+            print('  > Get water level information  CO-OPS  >>>> ERRORRRRR')
     ######
-    print('  > Get wind ocean information (ndbc)')
-    wnd_ocn, wnd_ocn_table = get_ndbc(
-        start=start_dt,
-        end=end_dt,
-        sos_name='winds',
-        bbox=bbox,
-        )
+    
+    
 
-    write_csv(obs_dir, name, year, table=wnd_ocn_table, data= wnd_ocn , label='ndbc_wind' )
+    if get_cops_wind:
+        try:
+            print('  > Get wind information CO-OPS ... ')
+            wnd_obs, wnd_obs_table = get_coops(
+                start=start_dt,
+                end=end_dt,
+                sos_name='wind_speed',
+                units=cf_units.Unit('m/s'),
+                bbox=bbox,
+                )
 
+            write_csv(obs_dir, name, year, table=wnd_obs_table, data= wnd_obs , label='coops_wind')
+        except:
+            print('  > Get wind information CO-OPS >>> ERORRRR')
     ######
-    print('  > Get wave ocean information (ndbc)')
-    wav_ocn, wav_ocn_table = get_ndbc(
-        start=start_dt,
-        end=end_dt,
-        sos_name='waves',
-        bbox=bbox,
-        )
+    if get_ndbc_wind:
+        try:
+            print('  > Get wind ocean information (ndbc) ... ')
+            wnd_ocn, wnd_ocn_table = get_ndbc(
+                start=start_dt,
+                end=end_dt,
+                sos_name='winds',
+                bbox=bbox,
+                )
 
-    write_csv(obs_dir, name, year, table=wav_ocn_table, data= wav_ocn , label='ndbc_wave' )
+            write_csv(obs_dir, name, year, table=wnd_ocn_table, data= wnd_ocn , label='ndbc_wind' )
+        except:
+            print('  > Get wind ocean information (ndbc)  >>> ERRRORRRR')
     ######
+    if get_ndbc_wave:
+        try:
+            print('  > Get wave ocean information (ndbc) ... ')
+            wav_ocn, wav_ocn_table = get_ndbc(
+                start=start_dt,
+                end=end_dt,
+                sos_name='waves',
+                bbox=bbox,
+                )
+
+            write_csv(obs_dir, name, year, table=wav_ocn_table, data= wav_ocn , label='ndbc_wave' )
+        except:  
+            print('  > Get wave ocean information (ndbc)  >>> ERRORRRR ')
+    ######
+    if get_usgs_hwm:
+        print('  > Get USGS HWM ... ')
+        write_high_water_marks(obs_dir, name, year)
+    
 
 
 
@@ -228,23 +261,23 @@ if False:
     wnd_ocn_table1, wnd_ocn1  = read_csv (obs_dir, name, year, label='ndbc_wind' )
     wav_ocn_table1, wav_ocn1 = read_csv (obs_dir, name, year, label='ndbc_wave' )
 
+    #if False:
+    #
+    # back up script file
+    args=sys.argv
+    scr_name = args[0]
+    scr_dir = os.path.join(obs_dir, name+year)
+    os.system('cp -fr ' + scr_name + '    ' + scr_dir)
+    #
+    #with open(pick, "rb") as f:
+    #    w = pickle.load(f)
 
-#
-# back up script file
-args=sys.argv
-scr_name = args[0]
-scr_dir = os.path.join(obs_dir, name+year)
-os.system('cp -fr ' + scr_name + '    ' + scr_dir)
-#
-#with open(pick, "rb") as f:
-#    w = pickle.load(f)
-
-#f = open(pick, "rb")
-#w = pickle.load(f)
+    #f = open(pick, "rb")
+    #w = pickle.load(f)
 
 
-#if __name__ == "__main__":
-#    main()
+    #if __name__ == "__main__":
+    #    main()
 
 
 

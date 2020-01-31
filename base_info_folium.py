@@ -24,39 +24,14 @@ import sys,os
 import datetime
 from   collections import defaultdict
 
-base_dirf = '/home/saeed.moghimi.lx/work/03_post/03_folium_related/coastal_act/'
-#base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot/'
+#base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/wrk_dir/'
+base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot_v04/'
+
 
 
 storms = defaultdict(dict)
 
-
-if False:
-	key  = 'FLORENCE'
-	storms[key]['name' ]   = key
-	storms[key]['year' ]   = '2018'
-	storms[key]['start']   = None 
-	storms[key]['end'  ]   = None
-	storms[key]['bbox' ]   = None    
-
-if True:
-#if False:
-    key  = 'SANDY'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2012'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = -82.50, 10.50, -65.50, 41.80
-
-if False:
-    key  = 'IRMA'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2017'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = None    
-
-if False:
+if True:    
     key  = 'IRENE'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2011'
@@ -64,15 +39,7 @@ if False:
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   =  -82.50, 12.90, -56.50, 47.30  
 
-if False:
-    key  = 'IKE'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2008'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = None
-if False:    
-
+if True:    
     key  = 'SANDY'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2012'
@@ -80,26 +47,7 @@ if False:
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = -82.50, 10.50, -65.50, 41.80
 
-
-
-#if True:
-if False:
-
-    key  = 'MARIA'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2017'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = -82.50,9.90, -56.50, 44.00
-
-
-    key  = 'MATTHEW'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2016'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = None
-
+if True:    
     key  = 'ISAAC'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2012'
@@ -107,6 +55,47 @@ if False:
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = None
 
+if True:    
+    key  = 'ARTHUR'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2014'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = -82.0, 25.50, -63.50, 47.00
+
+if True:    
+    key  = 'MATTHEW'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2016'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+if True:    
+    key  = 'HERMINE'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2016'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+ 
+if True:    
+    key  = 'IRMA'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2017'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None    
+
+if True:    
+    key  = 'MARIA'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2017'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = -82.50,9.90, -56.50, 44.00
+
+if True:    
     key  = 'HARVEY'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2017'
@@ -115,23 +104,34 @@ if False:
     storms[key]['bbox' ]   = -99.70, 17.90, -88.10, 33.70
 
 
-    key  = 'ARTHUR'
+if True:    
+    key  = 'FLORENCE'
     storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2014'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = -82.0, 25.50, -63.50, 47.00
-
-    key  = 'HERMINE'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2016'
+    storms[key]['year' ]   = '2018'
     storms[key]['start']   = None 
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = None
 
-    key  = 'IRMA'
+if True:    
+    key  = 'MICHAEL'
     storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2017'
+    storms[key]['year' ]   = '2018'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+if True:    
+    key  = 'BARRY'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2019'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+if True:    
+    key  = 'DORIAN'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2019'
     storms[key]['start']   = None 
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = None
@@ -139,59 +139,11 @@ if False:
 
 
 
-#
-#year    = '2008'
-#name    = 'IKE'
-
-#no GIS data
-#year    = '2003'
-#name    = 'ISABEL'
-
-
-#base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/'
-#base_dir = '/data01/data01/01-projects/07-NOAA-CoastalAct/04-working/02-hurricane/hurrican_web_plot/'
-
-#name = 'IRENE'
-#year = '2011'
-#year    = '2017'
-#name    = 'IRMA'
-
-#name = 'SANDY'
-#year = '2012'
-
-#name = 'IRENE'
-#year = '2011'
-
-#name = 'HARVEY'
-#year = '2017'
-
-#name = 'MARIA'
-#year = '2017'
-
-#name = 'MATTHEW'
-#year = '2016'
-
-
-
-
-#name = 'ISAAC'
-#year = '2012'
-
-
-#name = 'HERMINE'
-#year = '2016'
-
-#name = 'ARTHUR'
-#year = '2014'
-
-
-#year    = '2017'
-#name    = 'IRMA'
-
-
-
-
-
+get_cops_wlev = False
+get_cops_wind = False
+get_ndbc_wave = False
+get_ndbc_wind = False
+get_usgs_hwm  = True
 
 plot_cones = False
 plot_sat   = False
@@ -199,9 +151,8 @@ plot_sat   = False
 obs_xtra_days = datetime.timedelta(4)
 
 
-remove_mean_diff = True
-
-apply_bbox_bias = False
+remove_mean_diff = False
+apply_bbox_bias  = False
 #San_area2
 bias_bbox = [  -75.9 ,  38.5 ,  -73.3 , 41.3 ]
 bias_calc_start =  datetime.datetime(2012, 10, 22, 11, 0)
