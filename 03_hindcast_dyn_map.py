@@ -48,7 +48,7 @@ from shapely.geometry import LineString
 import netCDF4
 #
 import folium
-from folium.plugins import Fullscreen, MarkerCluster
+from folium.plugins import Fullscreen, MarkerCluster,MousePosition,FloatImage
 from ioos_tools.ioos import get_coordinates
 from branca.element import *
 
@@ -127,7 +127,7 @@ my_cmap = plt.cm.jet
 
 ######################################
 # Let's create a color code for the point track.
-colors = {
+colors_hurricane_condition = {
     'subtropical depression': '#ffff99',
     'tropical depression': '#ffff66',
     'tropical storm': '#ffcc99',
@@ -975,13 +975,13 @@ for key in storms.keys():
 
 
     print ( ' > Read NHC information ... ')
-    code,hurricane_gis_files = get_nhc_storm_info (year,name)
+    al_code , hurricane_gis_files = get_nhc_storm_info (year,name)
 
     #donload gis zip files
     base = download_nhc_gis_files(hurricane_gis_files)
 
     # get advisory cones and track points
-    cones,points,pts = read_advisory_cones_info(hurricane_gis_files,base,year,code)
+    cones , points , pts = read_advisory_cones_info(hurricane_gis_files,base,year,al_code)
 
     # Find the bounding box to search the data.
     bbox_from_track = True
@@ -1010,7 +1010,7 @@ for key in storms.keys():
     #######################################
 
     fgrd      = os.path.join(mod_dir,'depth_hsofs_inp.nc')
-    fhwm      = os.path.join(obs_dir,'hwm/hwm_' + prefix.lower() + '.csv')
+    fhwm      = os.path.join(obs_dir,'hwm/' + (name+year).lower() + '.csv')
 
     dirs = np.array(glob(os.path.join(mod_dir,prefix)+'/*'))
     if len(dirs) == 0:
@@ -1049,9 +1049,6 @@ for key in storms.keys():
             start = points[0]['FLDATELBL']
             end = points[-1]['FLDATELBL']
             date_key = 'FLDATELBL'
-
-            #start = arrow.get(start, 'YYYY-MM-DD h:mm A ddd').naive
-            #end   = arrow.get(end, 'YYYY-MM-DD h:mm A ddd').naive
 
             start_dt = arrow.get(start, 'YYYY-MM-DD h:mm A ddd').datetime
             end_dt   = arrow.get(end,   'YYYY-MM-DD h:mm A ddd').datetime
@@ -1308,7 +1305,7 @@ for key in storms.keys():
             ############################################################
             #if  'FLDATELBL' in points[0].keys():
             ##
-            m = folium.Map(location=[lat, lon], tiles='OpenStreetMap', zoom_start=4)
+            m = folium.Map(location=[lat, lon], tiles='OpenStreetMap', zoom_start=4, control_scale=True)
             Fullscreen(position='topright', force_separate_button=True).add_to(m)
 
 
@@ -1563,10 +1560,13 @@ for key in storms.keys():
                     date = row[date_key] 
                     hclass = row['TCDVLP']
                     popup = '{}<br>{}'.format(date, hclass)
-                    color = colors[hclass.lower()]
+                    if 'tropical' in hclass.lower():
+                        hclass = 'tropical depression'
+        
+                    color = colors_hurricane_condition [hclass.lower()]
                 else:
                     popup = '{}<br>{}'.format(name,year )
-                    color = colors['hurricane']
+                    color = colors_hurricane_condition ['hurricane']
               
                 location = row['LAT'], row['LON']
                 folium.CircleMarker(
@@ -1577,30 +1577,7 @@ for key in storms.keys():
                     popup=popup,
                 ).add_to(m)
         ####################################################
-        print('     > Plot points along the final track ..')
-        #marker_cluster3 = MarkerCluster(name='Track')
-        #marker_cluster3.add_to(m)
-
-        for point in points:
-            if  'FLDATELBL' in points[0].keys():    #Newer storms have this information
-                date = point[date_key]
-                hclass = point['TCDVLP']
-                popup = '{}<br>{}'.format(date, hclass)
-                color = colors[hclass.lower()]
-            else:
-                popup = '{}<br>{}'.format(name,year )
-                color = colors['hurricane']
-            
-            location = point['LAT'], point['LON']
-            folium.CircleMarker(
-                location=location,
-                radius=track_radius,
-                fill=True,
-                color=color,
-                popup=popup,
-            ).add_to(m)
-
-    ####################################################
+    
     print('     > Plot points along the final track ..')
     #marker_cluster3 = MarkerCluster(name='Track')
     #marker_cluster3.add_to(m)
@@ -1609,11 +1586,27 @@ for key in storms.keys():
         if  'FLDATELBL' in points[0].keys():    #Newer storms have this information
             date = point[date_key]
             hclass = point['TCDVLP']
-            popup = '{}<br>{}'.format(date, hclass)
-            color = colors[hclass.lower()]
+            popup = """
+                <div style="width: 200px; height: 90px" </div>
+                <h5> {} condition</h5> <br>
+                'Date:      {} <br> 
+                 Condition: {} <br>
+                """.format(name, date, hclass)
+            
+            if 'tropical' in hclass.lower():
+                hclass = 'tropical depression'
+            
+            color = colors_hurricane_condition [hclass.lower()]
         else:
             popup = '{}<br>{}'.format(name,year )
-            color = colors['hurricane']
+            color = colors_hurricane_condition ['hurricane']
+        
+
+        
+        
+        
+        
+        
         
         location = point['LAT'], point['LON']
         folium.CircleMarker(
@@ -1629,196 +1622,91 @@ for key in storms.keys():
     try:
         print('     > Plot High Water Marks ..')
         df = pd.read_csv(fhwm)
-        lon_hwm = df.lon.values
-        lat_hwm = df.lat.values
-        hwm     = df.elev_msl_m.values
-
-        if 'HWM_ID' not in df.columns:
-            print ('       > Check hwm file: HWM_ID is missing ...')
-            df['HWM_ID'] = 'Key Error'
-
-        if 'Description' not in df.columns:
-            print ('       > Check hwm file: Description is missing ...')
-            df['Description'] = 'Key Error'        
-
-        #
-        #marker_cluster_hwm = MarkerCluster(name='High Water Marks')
-        #marker_cluster_hwm.add_to(m)
+        lon_hwm = df.longitude.values
+        lat_hwm = df.latitude.values
+        hwm     = df.elev_m.values
+        
+        hwm_ground_grp = folium.FeatureGroup(name= 'High water marks')
+        
         # HWMs
         for im in range (len(hwm)):
-        #for im in np.arange(100):
             location = lat_hwm[im], lon_hwm[im]
-            ind = np.argmin (np.abs(levels-hwm[im]))
 
-            #popup = 'HWM_ID:{}<br>{}'.format(df['HWM_ID'][im],df['Description'][im])
-            #popup = popup[:50]
-
-            words = ' '.join(df['Description'][im].split()[:3])
-            #popup = 'HWM_ID: {} <br> {} <br> Elev: {} [m, MSL]'.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
+            words = ' '.join(df['hwmQualityName'][im].split()[:3]) +'\t'+ ' '.join(df['hwmTypeName'][im].split()[:3])
             
 
             popup = """
             <div style="width: 180px;" </div>
             <h4> High Water Mark data</h4> <br>
-            'HWM_ID:     {} <br> 
-            Description: {} <br>
-            Elev:        {} [m, MSL]'
-            """.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
-
+            'Site ID:     {} <br> 
+            Description:  {} <br>
+            Elev:         {} [m]'
+            """.format(df['site_id'][im],words,str(hwm[im])[:4])
             
-            #popup = popup[:50]
 
+            try:
+                ind = np.argmin (np.abs(levels-hwm[im]))
+                colorc = colors_elev[ind]
+            except:
+                colors_new = ['#d7191c',  '#fdae61',  '#ffffbf',  '#abdda4',  '#2b83ba']
+                colorc =  'darkred'
+            
             
             folium.CircleMarker(
                 location=location,
-                radius=3,
-                fill=True,
-                fill_color = colors_elev[ind],
-                fill_opacity = 85,
-                color      = colors_elev[ind],
-                popup = popup,
-            ).add_to(m)
+                radius = 3,
+                fill   = True,
+                fill_color = colorc,
+                fill_opacity = 75,
+                color        = colorc,
+                popup        = popup,
+                ).add_to(hwm_ground_grp)
+                
+            hwm_ground_grp.add_to(m)
     except:
         print('WARNING: High Water Mark Data not available!')
     #################################################
     print ('     > Add disclaimer and storm name ..')
+    noaa_logo = 'https://www.nauticalcharts.noaa.gov/images/noaa-logo-no-ring-70.png'
+    FloatImage(noaa_logo, bottom=11, left=1).add_to(m)
 
-    Disclaimer_html =   '''
-                    <div style="position: fixed; 
-                                bottom: 15px; left: 20px; width: 520px; height: 40px; 
-                                border:2px solid grey; z-index:9999; font-size:12px; background-color: lightgray;opacity: 0.6;
-                                ">&nbsp; For Official Use Only. Pre-Decisional information not releasable outside US Government. <br>
-                                  &nbsp; Contact: Saeed.Moghimi@noaa.gov CSDL/OCS/NOS/NOAA &nbsp; <br>
-                    </div>
-                    ''' 
-
-    m.get_root().html.add_child(folium.Element(Disclaimer_html))
 
     storm_info_html ='''
                     <div style="position: fixed; 
-                                bottom: 75px; left: 20px; width: 150px; height: 50px; 
-                                border:2px solid grey; z-index:9999; font-size:18px;background-color: lightgray;opacity: 0.6;
+                                bottom: 50px; left: 5px; width: 140px; height: 45px; 
+                                border:2px solid grey; z-index:9999; font-size:14px;background-color: lightgray;opacity: 0.9;
                                 ">&nbsp; Storm: {} <br>
                                   &nbsp; Year:  {}  &nbsp; <br>
                     </div>
                     '''.format(name,year) 
 
     m.get_root().html.add_child(folium.Element(storm_info_html))
+    ############################################################################
+    Disclaimer_html =   '''
+                    <div style="position: fixed; 
+                                bottom: 5px; left: 250px; width: 520px; height: px; 
+                                border:2px solid grey; z-index:9999; font-size:12px; background-color: lightblue;opacity: 0.6;
+                                ">&nbsp; Hurricane data explorer;  
+                                <a href="https://nauticalcharts.noaa.gov/" target="_blank" >         NOAA/NOS/OCS</a> <br>
+                                  &nbsp; Contact: Dr. Saeed Moghimi ( Email: Saeed [dot] Moghimi [at] noaa [dot] gov ); &nbsp; <br>
+                                  &nbsp; Disclaimer: All configurations and results are pre-decisional and for official use only. <br>
+                    </div>
+                    ''' 
+
+    m.get_root().html.add_child(folium.Element(Disclaimer_html))
     ###################################################
     folium.LayerControl().add_to(m)
-
+    MousePosition().add_to(m)
 
     print ('     > Save file ...')
-    fname = '{}_{}_{}_storm.html'.format(name.split()[-1].lower(),forcing,key0)
+    
+    outh = './html_out/'
+    if not os.path.exists(outh):
+        os.makedirs(outh)
+    
+    fname = './html_out/z_{}_{}_{}_{}_storm.html'.format(name.split()[-1].lower(),year,forcing,key0)
     m.save(fname)
 
-if False:
-        #m = make_map(bbox)
-        ####################################################
-        try:
-            print('     > Plot High Water Marks ..')
-            df = pd.read_csv(fhwm)
-            lon_hwm = df.lon.values
-            lat_hwm = df.lat.values
-            hwm     = df.elev_msl_m.values
-            #
-            #marker_cluster_hwm = MarkerCluster(name='High Water Marks')
-            #marker_cluster_hwm.add_to(m)
-            # HWMs
-            for im in range (len(hwm)):
-            #for im in np.arange(100):
-                location = lat_hwm[im], lon_hwm[im]
-                ind = np.argmin (np.abs(levels-hwm[im]))
 
-                #popup = 'HWM_ID:{}<br>{}'.format(df['HWM_ID'][im],df['Description'][im])
-                #popup = popup[:50]
-
-                words = ' '.join(df['Description'][im].split()[:3])
-
-
-                try:
-	                popup = """
-	                <h3> High Water Mark </h3><br>
-	                'HWM_ID: {}<br> 
-	                Description: {} <br>
-	                Elev: {} [m, MSL]'
-	                """.format(df['HWM_ID'][im],words,str(hwm[im])[:4])
-                except:
-                    print ( '  >>> NEED care ....  Redo hwm data prep for this storm .... ')
-                    popup = ''#'HWM_ID: {}<br>{}<br>Elev: {} [m, MSL]'.format(df['Description'][im],words,str(hwm[im])[:4])
-                    pass 
-                #popup = popup[:50]
-
-                
-                folium.CircleMarker(
-                    location=location,
-                    radius=3,
-                    fill=True,
-                    fill_color = colors_elev[ind],
-                    fill_opacity = 85,
-                    color      = colors_elev[ind],
-                    popup = popup,
-                ).add_to(m)
-        except:
-            print('WARNING: High Water Mark Data not available!')
-        #################################################
-        print ('     > Add disclaimer and storm name ..')
-
-        Disclaimer_html =   '''
-                        <div style="position: fixed; 
-                                    bottom: 15px; left: 20px; width: 520px; height: 40px; 
-                                    border:2px solid grey; z-index:9999; font-size:12px; background-color: lightgray;opacity: 0.6;
-                                    ">&nbsp; For Official Use Only. Pre-Decisional information not releasable outside US Government. <br>
-                                      &nbsp; Contact: Saeed.Moghimi@noaa.gov CSDL/OCS/NOS/NOAA &nbsp; <br>
-                        </div>
-                        ''' 
-
-        m.get_root().html.add_child(folium.Element(Disclaimer_html))
-
-
-
-        storm_info_html ='''
-                        <div style="position: fixed; 
-                                    bottom: 75px; left: 20px; width: 250px; height: 50px; 
-                                    border:2px solid grey; z-index:9999; font-size:18px;background-color: lightgray;opacity: 0.6;
-                                    ">&nbsp; Storm: {} <br>
-                                      &nbsp; Year:  {}  &nbsp; <br>
-                        </div>
-                        '''.format(name,year) 
-
-        m.get_root().html.add_child(folium.Element(storm_info_html))
-        ###################################################
-        folium.LayerControl().add_to(m)
-
-
-        print ('     > Save file ...')
-        fname = obs_dir+'/z_{}_{}_{}_storm.html'.format(name.split()[-1].lower(),forcing,key0)
-        m.save(fname)
-
-        
-        
-       
-
-        if False:
-            #plot stations
-            print ('Static Cartopy map ...')
-            fig,ax = make_map()                                             
-            ax.set_title('Arizona Outdoor Stations')
-            ax.legend(ncol=4)
-
-            ax.scatter(x=wav_ocn_table.lon  ,y=wav_ocn_table.lat  ,s=10,c='blue'  ,lw=0,label = 'wave NDBC',alpha=0.7)
-
-
-            ax.legend()  
-            ax.set_xlim(lim['xmin'],lim['xmax'])
-            ax.set_ylim(lim['ymin'],lim['ymax'])
-
-            plt.savefig('purpule_outside.png',dpi=450)
-            plt.show()
-
-#wnd_ocn_observs,wnd_ocn_models,wnd_ocn
-#wav_ocn,wav_observs,wav_models
-#wnd_obs,wnd_observs,wnd_models
-#ssh,ssh_observations, ssh_from_model
 
 

@@ -113,7 +113,7 @@ def get_nhc_storm_info (year,name):
      
     url = 'http://www.nhc.noaa.gov/gis/archive_wsurge.php?year='+year
 
-    r = requests.get(url,headers=headers)
+    r = requests.get(url,headers=headers,verify=False)
 
     soup = BeautifulSoup(r.content, 'lxml')
 
@@ -136,41 +136,43 @@ def get_nhc_storm_info (year,name):
     ###############################
 
     print('  > based on specific storm go fetch gis files')
-    hid = df.to_dict()['identifier'][name]
-    code = ('{}'+year).format(hid)
-    hurricane_gis_files = '{}_5day'.format(code)
+    hid = df.to_dict()['identifier'][name.upper()]
+    al_code = ('{}'+year).format(hid)
+    hurricane_gis_files = '{}_5day'.format(al_code)
     
-    return code,hurricane_gis_files
+    return al_code,hurricane_gis_files
 
 
 #################
-@retry(stop_max_attempt_number=5, wait_fixed=3000)
+#@retry(stop_max_attempt_number=5, wait_fixed=3000)
 def download_nhc_gis_files(hurricane_gis_files):
     """
     
     """
     
-    nhc = 'http://www.nhc.noaa.gov/gis/forecast/archive/'
-
-    # We don't need the latest file b/c that is redundant to the latest number.
-    fnames = [
-        fname for fname in url_lister(nhc)
-        if fname.startswith(hurricane_gis_files) and 'latest' not in fname
-    ]
-
-
     base = os.path.abspath(
         os.path.join(os.path.curdir, 'data', hurricane_gis_files)
     )
+    
+    if len (glob(base+'/*')) < 1:
+        nhc = 'http://www.nhc.noaa.gov/gis/forecast/archive/'
 
-    if not os.path.exists(base):
-        os.makedirs(base)
+        # We don't need the latest file b/c that is redundant to the latest number.
+        fnames = [
+            fname for fname in url_lister(nhc)
+            if fname.startswith(hurricane_gis_files) and 'latest' not in fname
+        ]
 
-    for fname in fnames:
-        if not os.path.exists(path):
-            url = '{}/{}'.format(nhc, fname)
-            path = os.path.join(base, fname)
-            download(url, path,fname)
+
+
+        if not os.path.exists(base):
+            os.makedirs(base)
+
+        for fname in fnames:
+            if not os.path.exists(path):
+                url = '{}/{}'.format(nhc, fname)
+                path1 = os.path.join(base, fname)
+                download(url, path1,fname)
 
     return base
     #################################
@@ -225,7 +227,7 @@ def download_nhc_best_track(year,code):
     if not os.path.exists(base):
         os.makedirs(base)
 
-    path = os.path.join(base, fname)
+    path1 = os.path.join(base, fname)
     #download(url, path,fname) 
     if not os.path.exists(url+fname):
         wget.download(url+fname,out=base)
@@ -512,7 +514,7 @@ def get_coops_stations_info(type = 'wlev'):
         sys.exit(' ERORR: Not implemeted yet ..')          
         
     url  = 'https://opendap.co-ops.nos.noaa.gov/ioos-dif-sos/ClientGetter?p={}'.format(num)
-    r    = requests.get(url,headers=headers)
+    r    = requests.get(url,headers=headers,verify=False)
     
     soup = BeautifulSoup(r.content, 'lxml')
     
@@ -563,7 +565,7 @@ def get_ndbc_stations_info(type = 'wave'):
 
     """
     url  = 'https://sdf.ndbc.noaa.gov/stations.shtml'
-    r    = requests.get(url,headers=headers)
+    r    = requests.get(url,headers=headers,verify=False)
     
     soup = BeautifulSoup(r.content, 'lxml')
     
@@ -703,7 +705,7 @@ def read_csv(obs_dir, name, year, label):
     outt    = os.path.join(obs_dir, name+year,label)
     outd    = os.path.join(outt,'data')  
     if not os.path.exists(outd):
-       sys.exit('ERROR',outd )
+       sys.exit('ERROR: check path to: ',outd )
 
     table = pd.read_csv(os.path.join(outt,'table.csv')).set_index('station_name')
     table['station_code'] = table['station_code'].astype('str')
@@ -747,7 +749,7 @@ def write_high_water_marks(obs_dir, name, year):
     usgs_json_file = os.path.join(out_dir,'usgs_hwm_tmp.json')
 
     if not os.path.exists( usgs_json_file):
-        response = requests.get(url, params=params, headers=headers)
+        response = requests.get(url, params=params, headers=headers,verify=False)
         response.raise_for_status()
         json_data = json.loads(response.text)
         with open(usgs_json_file, 'w') as outfile:
@@ -906,3 +908,8 @@ def test():
 
     f = open(pick, "rb")
     w = pickle.load(f)
+    
+    
+    
+    
+    

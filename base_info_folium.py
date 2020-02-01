@@ -31,6 +31,17 @@ base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurr
 
 storms = defaultdict(dict)
 
+
+if True:    
+    key  = 'DORIAN'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2019'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+
+
 if True:    
     key  = 'IRENE'
     storms[key]['name' ]   = key
@@ -128,13 +139,6 @@ if True:
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = None
 
-if True:    
-    key  = 'DORIAN'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2019'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = None
 
 
 get_cops_wlev = False
