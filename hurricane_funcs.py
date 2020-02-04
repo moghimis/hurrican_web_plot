@@ -284,7 +284,7 @@ def read_gis_best_track(base,code):
 
 #################
 @retry(stop_max_attempt_number=5, wait_fixed=3000)
-def get_coops(start, end, sos_name, units, bbox,datum='MSL', verbose=True):
+def get_coops(start, end, sos_name, units, bbox,datum='NAVD', verbose=True):
     """
     function to read COOPS data
     We need to retry in case of failure b/c the server cannot handle
@@ -300,7 +300,7 @@ def get_coops(start, end, sos_name, units, bbox,datum='MSL', verbose=True):
     config = dict(
         units=units,
         sos_name=sos_name,
-        datum='MSL',            ###Saeed added
+        datum = datum,            ###Saeed added     ["MLLW","MSL","MHW","STND","IGLD", "NAVD"]
     )
 
     data = collector2table(
@@ -866,7 +866,7 @@ def test():
         end=end_dt,
         sos_name='water_surface_height_above_reference_datum',
         units=cf_units.Unit('meters'),
-        datum = 'MSL',
+        datum = 'NAVD',
         bbox=bbox,
     )
 

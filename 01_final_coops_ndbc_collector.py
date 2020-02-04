@@ -195,12 +195,16 @@ for key in storms.keys():
     if get_cops_wlev:
         try:
             print('  > Get water level information CO-OPS ... ')
+            
+            # ["MLLW","MSL","MHW","STND","IGLD", "NAVD"]
+            datum =  'NAVD'
+            print ('datum=', datum )
             ssh, ssh_table = get_coops(
                 start=start_dt,
                 end=end_dt,
                 sos_name='water_surface_height_above_reference_datum',
                 units=cf_units.Unit('meters'),
-                datum = 'MSL',
+                datum = datum ,
                 bbox=bbox,
                 )
 

@@ -510,7 +510,8 @@ def make_dual_plot(obs, model = None,label=None,remove_mean_diff=False,bbox_bias
 #################
 def make_marker(p, location, fname , color = 'green',icon= 'stats'):
     html = file_html(p, CDN, fname)
-    iframe = IFrame(html, width=width+45+height, height=height+80)
+    #iframe = IFrame(html , width=width+45+height, height=height+80)
+    iframe = IFrame(html , width=width * 1.1, height=height * 1.1)
     #popup = folium.Popup(iframe, max_width=2650+height)
     popup = folium.Popup(iframe)
     iconm = folium.Icon(color = color, icon=icon)
@@ -1626,7 +1627,7 @@ for key in storms.keys():
         lat_hwm = df.latitude.values
         hwm     = df.elev_m.values
         
-        hwm_ground_grp = folium.FeatureGroup(name= 'High water marks')
+        hwm_ground_grp = folium.FeatureGroup(name= 'USGS High water marks')
         
         # HWMs
         for im in range (len(hwm)):
@@ -1637,7 +1638,7 @@ for key in storms.keys():
 
             popup = """
             <div style="width: 180px;" </div>
-            <h4> High Water Mark data</h4> <br>
+            <h4> USGS High Water Mark data</h4> <br>
             'Site ID:     {} <br> 
             Description:  {} <br>
             Elev:         {} [m]'
@@ -1668,7 +1669,7 @@ for key in storms.keys():
     #################################################
     print ('     > Add disclaimer and storm name ..')
     noaa_logo = 'https://www.nauticalcharts.noaa.gov/images/noaa-logo-no-ring-70.png'
-    FloatImage(noaa_logo, bottom=11, left=1).add_to(m)
+    FloatImage(noaa_logo, bottom=11, left=1.5).add_to(m)
 
 
     storm_info_html ='''
@@ -1686,7 +1687,7 @@ for key in storms.keys():
                     <div style="position: fixed; 
                                 bottom: 5px; left: 250px; width: 520px; height: px; 
                                 border:2px solid grey; z-index:9999; font-size:12px; background-color: lightblue;opacity: 0.6;
-                                ">&nbsp; Hurricane data explorer;  
+                                ">&nbsp; Hurricane Explorer;  
                                 <a href="https://nauticalcharts.noaa.gov/" target="_blank" >         NOAA/NOS/OCS</a> <br>
                                   &nbsp; Contact: Dr. Saeed Moghimi ( Email: Saeed [dot] Moghimi [at] noaa [dot] gov ); &nbsp; <br>
                                   &nbsp; Disclaimer: All configurations and results are pre-decisional and for official use only. <br>
@@ -1704,7 +1705,7 @@ for key in storms.keys():
     if not os.path.exists(outh):
         os.makedirs(outh)
     
-    fname = './html_out/z_{}_{}_{}_{}_storm.html'.format(name.split()[-1].lower(),year,forcing,key0)
+    fname = './html_out/z_{}_{}_{}_{}_storm.html'.format(year,name.split()[-1].lower(),forcing,key0)
     m.save(fname)
 
 

@@ -141,7 +141,7 @@ if True:
 
 
 
-get_cops_wlev = False
+get_cops_wlev = True
 get_cops_wind = False
 get_ndbc_wave = False
 get_ndbc_wind = False
