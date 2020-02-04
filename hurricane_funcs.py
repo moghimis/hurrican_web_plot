@@ -168,10 +168,11 @@ def download_nhc_gis_files(hurricane_gis_files):
         if not os.path.exists(base):
             os.makedirs(base)
 
+
         for fname in fnames:
-            if not os.path.exists(path):
+            path1 = os.path.join(base, fname)
+            if not os.path.exists(path1):
                 url = '{}/{}'.format(nhc, fname)
-                path1 = os.path.join(base, fname)
                 download(url, path1,fname)
 
     return base

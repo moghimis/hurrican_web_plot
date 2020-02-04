@@ -25,7 +25,8 @@ import datetime
 from   collections import defaultdict
 
 #base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/wrk_dir/'
-base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot_v04/'
+#base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot_v04/'
+base_dirf = '/home/saeed.moghimi.lx/work/03_post/03_folium_related/coastal_act_03/'
 
 
 
