@@ -147,7 +147,6 @@ def get_nhc_storm_info (year,name):
 #@retry(stop_max_attempt_number=5, wait_fixed=3000)
 def download_nhc_gis_files(hurricane_gis_files):
     """
-    
     """
     
     base = os.path.abspath(
@@ -163,11 +162,8 @@ def download_nhc_gis_files(hurricane_gis_files):
             if fname.startswith(hurricane_gis_files) and 'latest' not in fname
         ]
 
-
-
         if not os.path.exists(base):
             os.makedirs(base)
-
 
         for fname in fnames:
             path1 = os.path.join(base, fname)
