@@ -100,77 +100,65 @@ for key in storms.keys():
     print(            '******************************************************** \n\n\n\n\n\n')
 
 
-    #bbox_from_best_track = False
-    code,hurricane_gis_files = get_nhc_storm_info (year,name)
+
     
     
     #if bbox_from_best_track:
     try:    
-        ################################################################################
-        #for storms after 2010 works
-        base                     = download_nhc_gis_best_track(year,code)
-        line_best,points_best,radii = read_gis_best_track(base,code)
-        download_nhc_best_track(year,code)
-        #
-        start_txt_best = str (np.array( points_best.DTG)[ 0])
-        end_txt_best   = str (np.array( points_best.DTG)[-1])
-
-        # get bbox from best track
-        bounds = np.array(points_best.buffer(2).bounds)
-        lons_best   = np.r_[bounds[:,0],bounds[:,2]]
-        lats_best   = np.r_[bounds[:,1],bounds[:,3]]
-        bbox_best = lons_best.min(), lats_best.min(), lons_best.max(), lats_best.max()    
-    except:
-        pass   
         
-        ################################################################################
-    #else:
+        #bbox_from_best_track = False
+        code,hurricane_gis_files = get_nhc_storm_info (year,name)        
+        
+        ###############################################################################
         #download gis zip files
-    base = download_nhc_gis_files(hurricane_gis_files)
-    # get advisory cones and track points
-    cones,pts_actual,points_actual = read_advisory_cones_info(hurricane_gis_files,base,year,code)
-    start    = pts_actual[0] ['FLDATELBL']
-    end      = pts_actual[-1]['FLDATELBL']
-    #start_txt_actual = ('20' + start[:-2]).replace('/','')
-    #end_txt_actual   = ('20' + end  [:-2]).replace('/','')
+        base = download_nhc_gis_files(hurricane_gis_files)
+        # get advisory cones and track points
+        cones,pts_actual,points_actual = read_advisory_cones_info(hurricane_gis_files,base,year,code)
+        start    = pts_actual[0] ['FLDATELBL']
+        end      = pts_actual[-1]['FLDATELBL']
+        #start_txt_actual = ('20' + start[:-2]).replace('/','')
+        #end_txt_actual   = ('20' + end  [:-2]).replace('/','')
 
 
-    #print('\n\n\n\n\n\n ********************************************************')
-    #for key1 in pts_actual[0].keys():
-    #    print(            '*****  pts_actual[0] [', key1, ']',pts_actual[0] [key1]   ,  '*********')
-    #print(            '******************************************************** \n\n\n\n\n\n')
+        #print('\n\n\n\n\n\n ********************************************************')
+        #for key1 in pts_actual[0].keys():
+        #    print(            '*****  pts_actual[0] [', key1, ']',pts_actual[0] [key1]   ,  '*********')
+        #print(            '******************************************************** \n\n\n\n\n\n')
 
-    start_dt = dateparser.parse(start,settings={"TO_TIMEZONE": "UTC"}).replace(tzinfo=None) - obs_xtra_days
-    end_dt   = dateparser.parse(end  ,settings={"TO_TIMEZONE": "UTC"}).replace(tzinfo=None) + obs_xtra_days   
-    
-    #try:
-    #    # bbox_from_best_track:
-    #    start_txt = start_txt_best
-    #    end_txt   = end_txt_best
-    #    #bbox      = bbox_best
-    #except:
-    #    start_txt = start_txt_actual
-    #    end_txt   = end_txt_actual
+        start_dt = dateparser.parse(start,settings={"TO_TIMEZONE": "UTC"}).replace(tzinfo=None) - obs_xtra_days
+        end_dt   = dateparser.parse(end  ,settings={"TO_TIMEZONE": "UTC"}).replace(tzinfo=None) + obs_xtra_days   
+        
+        #try:
+        #    # bbox_from_best_track:
+        #    start_txt = start_txt_best
+        #    end_txt   = end_txt_best
+        #    #bbox      = bbox_best
+        #except:
+        #    start_txt = start_txt_actual
+        #    end_txt   = end_txt_actual
 
-    #
-    #start_dt = arrow.get(start_txt, 'YYYYMMDDhh').datetime - obs_xtra_days
-    #end_dt   = arrow.get(end_txt  , 'YYYYMMDDhh').datetime + obs_xtra_days    
+        #
+        #start_dt = arrow.get(start_txt, 'YYYYMMDDhh').datetime - obs_xtra_days
+        #end_dt   = arrow.get(end_txt  , 'YYYYMMDDhh').datetime + obs_xtra_days    
 
-    
-    #if False:
-    # get bbox from actual data
-    last_cone = cones[-1]['geometry'].iloc[0]
-    track = LineString([point['geometry'] for point in pts_actual])
-    lons_actual = track.coords.xy[0]
-    lats_actual = track.coords.xy[1]
-    bbox_actual = min(lons_actual)-2, min(lats_actual)-2, max(lons_actual)+2, max(lats_actual)+2
-    ################################################################################
+        
+        #if False:
+        # get bbox from actual data
+        last_cone = cones[-1]['geometry'].iloc[0]
+        track = LineString([point['geometry'] for point in pts_actual])
+        lons_actual = track.coords.xy[0]
+        lats_actual = track.coords.xy[1]
+        bbox_actual = min(lons_actual)-2, min(lats_actual)-2, max(lons_actual)+2, max(lats_actual)+2
+        ################################################################################
 
-    # Find the bounding box to search the data.
-    bbox_from_best_track = False
+        # Find the bounding box to search the data.
+        bbox_from_best_track = False
+        bbox      = bbox_actual
+    except:
+        start_dt   = storms[key]['start']
+        end_dt     = storms[key]['end'  ]
+        bounds  = storms[key]['bbox' ]
 
-    
-    bbox      = bbox_actual
 
     if storms[key]['bbox'] is not None:
         bbox = storms[key]['bbox']
