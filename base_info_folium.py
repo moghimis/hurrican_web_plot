@@ -25,12 +25,12 @@ import datetime
 from   collections import defaultdict
 
 #base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/wrk_dir/'
-base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot_v04/'
+#base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot_v04/'
+base_dirf = '/home/saeed.moghimi.lx/work/03_post/03_folium_related/coastal_act_03/hurrican_web_plot/'
 
 
 
 storms = defaultdict(dict)
-
 
 if True:    
     key  = 'FLORENCE'
@@ -39,6 +39,25 @@ if True:
     storms[key]['start']   = None 
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = None
+
+
+if True:    
+    key  = 'KATRINA'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2005'
+    storms[key]['start']   = datetime.datetime(2005, 8, 20)
+    storms[key]['end'  ]   = datetime.datetime(2005, 9, 3)
+    storms[key]['bbox' ]   =  -97.35 , 17.78 , -66.10 , 33.66  
+
+
+if False:    
+    key  = 'IKE'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2008'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
 
 
 if False:
@@ -126,7 +145,6 @@ if False:
         storms[key]['bbox' ]   = -99.70, 17.90, -88.10, 33.70
 
 
-
     if True:    
         key  = 'MICHAEL'
         storms[key]['name' ]   = key
@@ -146,9 +164,9 @@ if False:
 
 
 get_cops_wlev = True
-get_cops_wind = False
-get_ndbc_wave = False
-get_ndbc_wind = False
+get_cops_wind = True
+get_ndbc_wave = True
+get_ndbc_wind = True
 get_usgs_hwm  = True
 
 plot_cones = False

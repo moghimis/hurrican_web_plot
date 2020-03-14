@@ -1106,7 +1106,9 @@ for key in storms.keys():
         try:
             ########### Read SSH data
             mod , mod_table = get_station_ssh(fort61)
-
+            
+            start_dt = max( start_dt.replace(tzinfo=None) , pd.to_datetime(mod[0].index[0]))
+            end_dt   = min( end_dt.replace(tzinfo=None)   , pd.to_datetime(mod[0].index[-1]))            
             ############# Sea Surface height analysis ########################
             # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
             common  = set(ssh_table['station_code']).intersection(mod_table  ['station_code'].values)
@@ -1139,12 +1141,12 @@ for key in storms.keys():
             ssh_from_model = []
             for series in ssh_mod:
                 _metadata = series._metadata
-                obs = series.reindex(index=index, limit=1, method='nearest')
-                obs._metadata = _metadata
-                obs.name = _metadata
-                obs['ssh'][np.abs(obs['ssh']) > 10] = np.nan
-                obs.dropna(inplace=True)
-                ssh_from_model.append(obs)
+                mod0 = series.reindex(index=index, limit=1, method='nearest')
+                mod0._metadata = _metadata
+                mod0.name = _metadata
+                mod0['ssh'][np.abs(mod0['ssh']) > 10] = np.nan
+                mod0.dropna(inplace=True)
+                ssh_from_model.append(mod0)
         
             
             if apply_bbox_bias:
@@ -1669,7 +1671,7 @@ for key in storms.keys():
     #################################################
     print ('     > Add disclaimer and storm name ..')
     noaa_logo = 'https://www.nauticalcharts.noaa.gov/images/noaa-logo-no-ring-70.png'
-    FloatImage(noaa_logo, bottom=11, left=1.5).add_to(m)
+    #FloatImage(noaa_logo, bottom=90, left=5).add_to(m)    #in percent
 
 
     storm_info_html ='''
@@ -1689,8 +1691,8 @@ for key in storms.keys():
                                 border:2px solid grey; z-index:9999; font-size:12px; background-color: lightblue;opacity: 0.6;
                                 ">&nbsp; Hurricane Explorer;  
                                 <a href="https://nauticalcharts.noaa.gov/" target="_blank" >         NOAA/NOS/OCS</a> <br>
-                                  &nbsp; Contact: Dr. Saeed Moghimi ( Email: Saeed [dot] Moghimi [at] noaa [dot] gov ); &nbsp; <br>
-                                  &nbsp; Disclaimer: All configurations and results are pre-decisional and for official use only. <br>
+                                  &nbsp; Contact: Saeed.Moghimi@noaa.gov &nbsp; <br>
+                                  &nbsp; Disclaimer: Experimental product. All configurations and results are pre-decisional and for official use only.<br>
                     </div>
                     ''' 
 
