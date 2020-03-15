@@ -28,8 +28,6 @@ from   collections import defaultdict
 base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot_v04/'
 #base_dirf = '/home/saeed.moghimi.lx/work/03_post/03_folium_related/coastal_act_03/hurrican_web_plot/'
 
-
-
 storms = defaultdict(dict)
 
 if True:    
@@ -39,6 +37,16 @@ if True:
     storms[key]['start']   = None 
     storms[key]['end'  ]   = None
     storms[key]['bbox' ]   = None
+
+
+if False:    
+
+    key  = 'KATRINA'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2005'
+    storms[key]['start']   = datetime.datetime(2005, 8, 20)
+    storms[key]['end'  ]   = datetime.datetime(2005, 9, 3)
+    storms[key]['bbox' ]   =  -97.35 , 17.78 , -66.10 , 33.66  
 
 if False:    
     key  = 'IKE'
