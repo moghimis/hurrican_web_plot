@@ -34,9 +34,9 @@ if True:
     key  = 'FLORENCE'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2018'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = None
+    storms[key]['start']   = datetime.datetime(2018, 8, 26)
+    storms[key]['end'  ]   = datetime.datetime(2018, 9, 26)
+    storms[key]['bbox' ]   = [-84.40, 9.90, -16.40, 38.20]
 
 
 if False:    

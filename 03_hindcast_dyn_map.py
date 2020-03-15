@@ -732,7 +732,7 @@ def get_model_at_station_wave(wav_at_nbdc):
     mod    = []
     ind = np.arange(len(sta_lat))
     for ista in ind:
-        stationID = sta_nam[ista][~sta_nam.mask[ista]].tostring().decode()
+        stationID = sta_nam[ista][~sta_nam.mask[ista]].tostring().decode().split('.')[0]
         stationIDs.append(stationID)
         mod_tmp = pd.DataFrame(data = np.c_[sta_date,sta_hsig[:,ista]],
                                columns = ['date_time', 'hsig' ]).set_index('date_time')
@@ -1164,7 +1164,7 @@ for key in storms.keys():
         ############# Wind COOPS and model analysis ########################
         try:
             #read wind model data
-            wnd_mod,wnd_mod_table = get_station_wnd(fort61)
+            wnd_mod , wnd_mod_table = get_station_wnd(fort61)
 
             # For simplicity we will use only the stations that have both wind speed and sea surface height and reject those that have only one or the other.
             commonw  = set(wnd_obs_table['station_code']).intersection(wnd_mod_table  ['station_code'].values)
@@ -1213,7 +1213,7 @@ for key in storms.keys():
         ############# Wave NDBC obs and model analysis ########################
         try:
             #read wave model data
-            wav_mod,wav_mod_table = get_model_at_station_wave(wav_at_nbdc)
+            wav_mod , wav_mod_table = get_model_at_station_wave(wav_at_nbdc)
             commonwav  = set(wav_ocn_table['station_code']).intersection(wav_mod_table['station_code'].values)
 
             wav_ocns, wav_mods = [], []
