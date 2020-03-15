@@ -925,7 +925,7 @@ def get_bias(bias_bbox,ssh,ssh_table,fort61 ):
     ssh_all = []
     for series in ssh_obs:
         _metadata = series._metadata
-        obs = series.reindex(index=index, limit=1, method='nearest')
+        obs = series.tz_localize(None).reindex(index=index, limit=1, method='nearest')
         obs._metadata = _metadata
         obs.name = _metadata['station_name']
         ssh_observations.append(obs)
@@ -937,7 +937,7 @@ def get_bias(bias_bbox,ssh,ssh_table,fort61 ):
     mod_all = []
     for series in ssh_mod:
         _metadata = series._metadata
-        obs = series.reindex(index=index, limit=1, method='nearest')
+        obs = series.tz_localize(None).reindex(index=index, limit=1, method='nearest')
         obs._metadata = _metadata
         obs.name = _metadata
         ssh_from_model.append(obs)
@@ -970,7 +970,7 @@ for key in storms.keys():
     ssh = ssh_observations = ssh_from_model = None
 
 
-    prefix  = name[:3]
+    name  = name  #[:3]
     obs_dir = os.path.join(base_dirf,'work_dir','obs')
     mod_dir = os.path.join(base_dirf,'work_dir','mod')
 
@@ -1013,7 +1013,7 @@ for key in storms.keys():
     fgrd      = os.path.join(mod_dir,'depth_hsofs_inp.nc')
     fhwm      = os.path.join(obs_dir,'hwm/' + (name+year).lower() + '.csv')
 
-    dirs = np.array(glob(os.path.join(mod_dir,prefix)+'/*'))
+    dirs = np.array(glob(os.path.join(mod_dir,name)+'/*'))
     if len(dirs) == 0:
         dirs = [os.getcwd()+'/']
         print ('WARNING: Incorrect Model directory or not model results ready yet!')
@@ -1083,19 +1083,19 @@ for key in storms.keys():
             print ('   >  wind from CSV files')
             wnd_obs_table,wnd_obs  = read_csv (obs_dir, name, year, label='coops_wind')
         except:
-            print ('   >  No wind CSV files')  
+            print ('   >>  No wind CSV files')  
 
         try:
             print ('   >  NDBC wind from CSV files')
             wnd_ocn_table,wnd_ocn  = read_csv (obs_dir, name, year, label='ndbc_wind' )
         except:
-            print ('   >  No ndbc wind CSV files')  
+            print ('   >>  No ndbc wind CSV files')  
 
         try:
             print ('   >  NDBC wave from CSV files')
             wav_ocn_table, wav_ocn = read_csv (obs_dir, name, year, label='ndbc_wave' )
         except:
-            print ('   >  NDBC wave CSV files')  
+            print ('   >> No  NDBC wave CSV files')  
 
         freq = '15min'
         freq = '30min'
@@ -1118,19 +1118,20 @@ for key in storms.keys():
                 ssh_obs.extend([obs for obs in ssh   if obs._metadata['station_code'] == station])
                 ssh_mod.extend([obm for obm in mod   if obm._metadata                 == station])
 
-
             index = pd.date_range(
                 start = start_dt.replace(tzinfo=None),
                 end   = end_dt.replace  (tzinfo=None),
                 freq=freq
             )
+            index = index.tz_localize(None) 
             #############################################################
             #organize and re-index both observations
             # Re-index and rename series.
             ssh_observations = []
             for series in ssh_obs:
+                #series = series.tz_localize(None)
                 _metadata = series._metadata
-                obs = series.reindex(index=index, limit=1, method='nearest')
+                obs = series.tz_localize(None).reindex(index=index, limit=1, method='nearest')
                 obs._metadata = _metadata
                 obs.dropna(inplace=True)
                 obs.name = _metadata['station_name']
@@ -1141,7 +1142,8 @@ for key in storms.keys():
             ssh_from_model = []
             for series in ssh_mod:
                 _metadata = series._metadata
-                mod0 = series.reindex(index=index, limit=1, method='nearest')
+                #series = series.tz_localize(None)
+                mod0 = series.tz_localize(None).reindex(index=index, limit=1, method='nearest')
                 mod0._metadata = _metadata
                 mod0.name = _metadata
                 mod0['ssh'][np.abs(mod0['ssh']) > 10] = np.nan
@@ -1184,7 +1186,8 @@ for key in storms.keys():
             wnd_observs = []
             for series in wobs:
                 _metadata = series._metadata
-                obs = series.reindex(index=index, limit=1, method='nearest')
+                series = series.tz_localize(None)
+                obs = series.tz_localize(None).reindex(index=index, limit=1, method='nearest')
                 obs._metadata = _metadata
                 obs.name = _metadata['station_name']
                 wnd_observs.append(obs)
@@ -1194,7 +1197,8 @@ for key in storms.keys():
             wnd_models = []
             for series in wmod:
                 _metadata = series._metadata
-                obs = series.reindex(index=index, limit=1, method='nearest')
+                #series = series.tz_localize(None)
+                obs = series.tz_localize(None).reindex(index=index, limit=1, method='nearest')
                 obs._metadata = _metadata
                 obs.name = _metadata
                 #obs['ssh'][np.abs(obs['ssh']) > 10] = np.nan
@@ -1228,7 +1232,8 @@ for key in storms.keys():
             wav_observs = []
             for series in wav_ocns:
                 _metadata = series._metadata
-                obs = series.reindex(index=index, limit=1, method='nearest')
+                series = series.tz_localize(None)
+                obs = series.tz_localize(None).reindex(index=index, limit=1, method='nearest')
                 obs._metadata = _metadata
                 obs.name = _metadata['station_name']
                 wav_observs.append(obs)
@@ -1238,7 +1243,8 @@ for key in storms.keys():
             wav_models = []
             for series in wav_mods:
                 _metadata = series._metadata
-                obs = series.reindex(index=index, limit=1, method='nearest')
+                #series = series.tz_localize(None)
+                obs = series.tz_localize(None).reindex(index=index, limit=1, method='nearest')
                 obs._metadata = _metadata
                 obs.name = _metadata
                 #obs['ssh'][np.abs(obs['ssh']) > 10] = np.nan
@@ -1272,7 +1278,8 @@ for key in storms.keys():
             wnd_ocn_observs = []
             for series in wnd_ocns:
                 _metadata = series._metadata
-                obs = series.reindex(index=index, limit=1, method='nearest')
+                series = series.tz_localize(None)
+                obs = series.tz_localize(None).reindex(index=index, limit=1, method='nearest')
                 obs._metadata = _metadata
                 obs.name = _metadata['station_name']
                 wnd_ocn_observs.append(obs)
@@ -1282,7 +1289,8 @@ for key in storms.keys():
             wnd_ocn_models = []
             for series in wnd_ocn_mods:
                 _metadata = series._metadata
-                obs = series.reindex(index=index, limit=1, method='nearest')
+                #series = series.tz_localize(None)
+                obs = series.tz_localize(None).reindex(index=index, limit=1, method='nearest')
                 obs._metadata = _metadata
                 obs.name = _metadata
                 #obs['ssh'][np.abs(obs['ssh']) > 10] = np.nan
