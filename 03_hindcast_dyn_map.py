@@ -511,7 +511,7 @@ def make_dual_plot(obs, model = None,label=None,remove_mean_diff=False,bbox_bias
 def make_marker(p, location, fname , color = 'green',icon= 'stats'):
     html = file_html(p, CDN, fname)
     #iframe = IFrame(html , width=width+45+height, height=height+80)
-    iframe = IFrame(html , width=width * 1.1, height=height * 1.1)
+    iframe = IFrame(html , width=width * 1.1, height=height * 1.2)
     #popup = folium.Popup(iframe, max_width=2650+height)
     popup = folium.Popup(iframe)
     iconm = folium.Icon(color = color, icon=icon)
