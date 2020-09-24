@@ -31,6 +31,16 @@ base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurr
 storms = defaultdict(dict)
 
 if True:    
+    key  = 'DORIAN'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2019'
+    storms[key]['start']   = datetime.datetime(2019, 8, 25)
+    storms[key]['end'  ]   = datetime.datetime(2019, 9, 8)
+    storms[key]['bbox' ]   = None
+    #storms[key]['bbox' ]   = [-84.40, 9.90, -16.40, 38.20]
+
+
+if False:    
     key  = 'FLORENCE'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2018'
@@ -39,7 +49,6 @@ if True:
     storms[key]['bbox' ]   = [-84.40, 9.90, -16.40, 38.20]
 
 
-if False:    
 
     key  = 'KATRINA'
     storms[key]['name' ]   = key

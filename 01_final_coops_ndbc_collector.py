@@ -186,6 +186,7 @@ for key in storms.keys():
             
             # ["MLLW","MSL","MHW","STND","IGLD", "NAVD"]
             datum =  'NAVD'
+            datum =  'MSL'
             print ('datum=', datum )
             ssh, ssh_table = get_coops(
                 start=start_dt,
