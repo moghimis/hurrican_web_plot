@@ -26,11 +26,19 @@ from   collections import defaultdict
 
 #base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/wrk_dir/'
 #base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot_v04/'
-base_dirf = '/home/moghimis/linux_working/00-working/08-stofs-post/hurrican_web_plot/'
+base_dirf = '/mnt/c/Users/Saeed.Moghimi/Documents/work/linux_working/00-working/08-stofs-post/hurrican_web_plot/'
 
 storms = defaultdict(dict)
 
-if True:    
+
+for nam in ['Hanna', 'Isaias', 'Laura', 'Marco', 'Beta', 'Alpha', 'Nana', 'Paulette', 'Sally', 'Teddy', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Iota']:
+    storms[nam]['name' ]   = nam.upper()
+    storms[nam]['year' ]   = '2020'
+    storms[nam]['bbox' ]   = None
+
+
+
+if False:    
     key  = 'DORIAN'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2019'
@@ -39,8 +47,6 @@ if True:
     storms[key]['bbox' ]   = None
     #storms[key]['bbox' ]   = [-84.40, 9.90, -16.40, 38.20]
 
-
-if False:    
     key  = 'FLORENCE'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2018'
@@ -48,39 +54,6 @@ if False:
     storms[key]['end'  ]   = datetime.datetime(2018, 9, 26)
     storms[key]['bbox' ]   = [-84.40, 9.90, -16.40, 38.20]
 
-
-
-    key  = 'KATRINA'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2005'
-    storms[key]['start']   = datetime.datetime(2005, 8, 20)
-    storms[key]['end'  ]   = datetime.datetime(2005, 9, 3)
-    storms[key]['bbox' ]   =  -97.35 , 17.78 , -66.10 , 33.66  
-
-if False:    
-    key  = 'IKE'
-    storms[key]['name' ]   = key
-    storms[key]['year' ]   = '2008'
-    storms[key]['start']   = None 
-    storms[key]['end'  ]   = None
-    storms[key]['bbox' ]   = None
-
-if False:
-    if True:    
-        key  = 'KATRINA'
-        storms[key]['name' ]   = key
-        storms[key]['year' ]   = '2005'
-        storms[key]['start']   = datetime.datetime(2005, 8, 20)
-        storms[key]['end'  ]   = datetime.datetime(2005, 9, 3)
-        storms[key]['bbox' ]   =  -97.35 , 17.78 , -66.10 , 33.66  
-
-    if True:    
-        key  = 'DORIAN'
-        storms[key]['name' ]   = key
-        storms[key]['year' ]   = '2019'
-        storms[key]['start']   = None 
-        storms[key]['end'  ]   = None
-        storms[key]['bbox' ]   = None
 
     if True:    
         key  = 'IRENE'
@@ -171,6 +144,30 @@ if False:
         storms[key]['end'  ]   = None
         storms[key]['bbox' ]   = None
 
+if False:    
+
+    key  = 'KATRINA'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2005'
+    storms[key]['start']   = datetime.datetime(2005, 8, 20)
+    storms[key]['end'  ]   = datetime.datetime(2005, 9, 3)
+    storms[key]['bbox' ]   =  -97.35 , 17.78 , -66.10 , 33.66  
+
+    key  = 'IKE'
+    storms[key]['name' ]   = key
+    storms[key]['year' ]   = '2008'
+    storms[key]['start']   = None 
+    storms[key]['end'  ]   = None
+    storms[key]['bbox' ]   = None
+
+
+
+## 2020
+# Hanna and Isaias
+# Laura and Marco
+# Beta Alpha  Nana
+# Paulette, Sally, and Teddy.
+# Gamma   Delta  Epsilon  Zeta Eta Iota 
 
 
 get_cops_wlev = True
@@ -179,7 +176,7 @@ get_ndbc_wave = True
 get_ndbc_wind = True
 get_usgs_hwm  = True
 
-plot_cones = False
+plot_cones = True
 plot_sat   = False
 
 obs_xtra_days = datetime.timedelta(4)
