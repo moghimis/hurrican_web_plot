@@ -140,7 +140,7 @@ def get_nhc_storm_info (year,name):
     al_code = ('{}'+year).format(hid)
     hurricane_gis_files = '{}_5day'.format(al_code)
     
-    return al_code,hurricane_gis_files
+    return al_code,hurricane_gis_files,df
 
 
 #################

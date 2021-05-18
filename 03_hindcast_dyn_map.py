@@ -976,7 +976,7 @@ for key in storms.keys():
 
 
     print ( ' > Read NHC information ... ')
-    al_code , hurricane_gis_files = get_nhc_storm_info (year,name)
+    al_code , hurricane_gis_files, df = get_nhc_storm_info (year,name)
 
     #donload gis zip files
     base = download_nhc_gis_files(hurricane_gis_files)

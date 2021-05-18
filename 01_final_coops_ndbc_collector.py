@@ -107,7 +107,7 @@ for key in storms.keys():
     try:    
         
         #bbox_from_best_track = False
-        code,hurricane_gis_files = get_nhc_storm_info (year,name)        
+        code,hurricane_gis_files,df = get_nhc_storm_info (year,name)        
         
         ###############################################################################
         #download gis zip files

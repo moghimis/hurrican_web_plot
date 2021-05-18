@@ -23,22 +23,16 @@ import numpy as np
 import sys,os
 import datetime
 from   collections import defaultdict
+from hurricane_funcs import get_nhc_storm_info
+
 
 #base_dirf = '/disks/NASARCHIVE/saeed_moghimi/post/folium/coastal_act/wrk_dir/'
 #base_dirf = '/data01/data01/01-projects/07-Maryland/02-working/02-hurricane/hurrican_web_plot_v04/'
 base_dirf = '/mnt/c/Users/Saeed.Moghimi/Documents/work/linux_working/00-working/08-stofs-post/hurrican_web_plot/'
-
 storms = defaultdict(dict)
 
 
-for nam in ['Hanna', 'Isaias', 'Laura', 'Marco', 'Beta', 'Alpha', 'Nana', 'Paulette', 'Sally', 'Teddy', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Iota']:
-    storms[nam]['name' ]   = nam.upper()
-    storms[nam]['year' ]   = '2020'
-    storms[nam]['bbox' ]   = None
-
-
-
-if False:    
+if True: 
     key  = 'DORIAN'
     storms[key]['name' ]   = key
     storms[key]['year' ]   = '2019'
@@ -46,6 +40,27 @@ if False:
     storms[key]['end'  ]   = datetime.datetime(2019, 9, 8)
     storms[key]['bbox' ]   = None
     #storms[key]['bbox' ]   = [-84.40, 9.90, -16.40, 38.20]
+
+
+if False: 
+    # 2020
+    for nam in ['Hanna', 'Isaias', 'Laura', 'Marco', 'Beta', 'Alpha', 'Nana', 'Paulette', 'Sally', 'Teddy', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Iota']:
+        storms[nam]['name' ]   = nam.upper()
+        storms[nam]['year' ]   = '2020'
+        storms[nam]['bbox' ]   = None
+
+if False: 
+    # 2019 storms
+    _,_,df = get_nhc_storm_info ('2019','DORIAN')        
+
+    ind = df.index
+    for ii in range(len(ind)-1):
+        nam = str(ind[ii+1])
+        print ('  >  ',nam)
+        storms[nam]['name' ]   = nam.upper()
+        storms[nam]['year' ]   = '2019'
+        storms[nam]['bbox' ]   = None
+
 
     key  = 'FLORENCE'
     storms[key]['name' ]   = key
@@ -179,7 +194,7 @@ get_usgs_hwm  = True
 plot_cones = True
 plot_sat   = False
 
-obs_xtra_days = datetime.timedelta(4)
+obs_xtra_days = datetime.timedelta(1)
 
 
 remove_mean_diff = True
